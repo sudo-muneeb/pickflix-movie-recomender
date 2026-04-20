@@ -1,50 +1,383 @@
 # Pickflix — AI Movie Recommender Frontend
 
-A dark, cinematic movie discovery platform. The 3D particle explorer lets you fly through thousands of films; the browse page fetches real data from the FastAPI backend; double-clicking any card slides up a full detail sheet.
+A dark, cinematic movie discovery platform. The 3D particle explorer lets you fly through thousands of films; the browse page fetches real data from the FastAPI backend; double-clicking any card slides up a full detail sheet. Personalized AI recommendations appear in the infinite-scroll `/recs` page.
 
 ---
 
-## 🗂 Project Structure
+## 🎯 Application Flow
+
+**New user journey:**
+```
+Land on / (3D home)
+  ↓ (scroll down to 97% depth)
+Navigate to /browse
+  ↓ (heart some movies)
+Click "Get recommendations"
+  ↓
+Navigate to /recs (infinite scroll + improve recs loop)
+```
+
+**Returning user:**
+```
+Land on /browse (default entry point)
+  ↓ (search, filter by language, or scroll)
+Double-click card → see full details
+  ↓ (heart movies)
+Click "Get recommendations" → /recs
+```
+
+---
+
+## 🧭 Page Routes & Behaviors
+
+| Route | Component | Entry Point | Behavior | Data Source |
+|---|---|---|---|---|
+| `/` | `Home.tsx` | Direct URL / landing | 3D particle explorer; scroll to 97% triggers RetroTV boot → `/browse` CTA | Static 3000-movie dataset (fallback) |
+| `/browse` | `BrowsePage.tsx` | `/` → RetroTV CTA or direct URL | Card grid + language filters + search + infinite scroll + like button + detail sheet | `GET /movies/default` + `GET /movies/search` + `GET /movies/{index}` |
+| `/recs` | `Recs.tsx` | `/browse` → "Get recommendations" button (via `history.state`) | Infinite-scroll card grid; liking a rec refreshes recs with updated seed | `POST /recommend` (repeatedly) |
+| `*` | `not-found.tsx` | Invalid URL | 404 fallback | None |
+
+---
+
+### 📄 Page Details
+
+#### **`/` (Home.tsx) — 3D Particle Explorer**
+
+**Entry behavior:**
+- Mounts `<Scene>` with Three.js canvas
+- Loads 3000 movies as red glowing particles (instanced mesh)
+- Camera positioned at `z = 0`; particles fill 3D space from `z = -150` to `z = 150`
+
+**Scroll behavior:**
+- Wheel scroll increases `cameraZOffset` smoothly (camera moves along +Z axis into the particle field)
+- Particles become denser as you move forward
+- **Depth %** counter (top-right HUD) tracks scroll: 0% (top) → 100% (97%+ → triggers RetroTV)
+
+**Mouse behavior:**
+- Hover any particle → red glow + scale-up animation + `<Tooltip>` appears (title + year)
+- Click particle → `<DetailPanel>` slides in from left (full metadata sidebar)
+- Mouse X/Y → subtle camera parallax effect
+
+**RetroTV Trigger:**
+- When `scrollDepth ≥ 0.97` (97% scrolled):
+  - `<RetroTV>` boot sequence starts
+  - Phases: **off** → **flicker** (rapid opacity toggles) → **static** (red noise canvas) → **clearing** (fade out) → **on** (breathing radial gradient)
+  - TV screen shows Pickflix branding + "What will you watch tonight?" CTA
+  - Clicking CTA: `navigate('/browse')` via wouter
+
+**Navigation out:**
+- Escape key → no-op (stay on 3D)
+- Search/browse intent → scroll to trigger RetroTV → click CTA
+
+---
+
+#### **`/browse` (BrowsePage.tsx) — 2D Movie Card Grid**
+
+**Entry behavior:**
+- On mount: `GET /movies/default?page_offset=0&lang=` (no lang filter = all languages)
+- Displays 20 movies in responsive grid (changes columns based on viewport)
+- Each `<MovieCard>` shows poster, language tag, rating, year, heart button
+
+**Language filtering:**
+- 9 filter pills: **All** | EN | KO | HI | FR | JA | ES | UR | DE
+- Clicking a pill: `GET /movies/default?page_offset=0&lang={code}`
+- Resets pagination to page 0; clears old grid; shows new language's top-rated movies
+- Selected pill highlighted in red
+
+**Search behavior:**
+- Search bar (top of page) debounced 300ms
+- Typing queries: `GET /movies/search?q={query}`
+- Results replace grid immediately
+- Clicking a result or clearing search → reverts to default list
+- Returns results ranked by match tier (exact → prefix → substring → fuzzy)
+
+**Infinite scroll:**
+- Sentinel `<div>` at bottom of grid
+- `IntersectionObserver` detects when user scrolls near bottom
+- Triggers: `GET /movies/default?page_offset={nextPage}&lang={currentLang}&pagination_key={key}`
+- Appends 20 more movies to grid; updates `has_more` flag
+- Continues until `has_more: false`
+- Uses the same `pagination_key` across pages to maintain consistent shuffle order
+
+**Like/heart button:**
+- Each card has a heart icon (outline = unliked, filled red = liked)
+- Click → toggles `likedIndices` state
+- Hearts persist only in frontend session state (not saved to backend)
+- `<LikedTray>` at bottom shows all liked movies' thumbnails + count badge
+
+**Double-click behavior:**
+- Double-click any card → `fetchMovieDetail(movie_index)`
+- `<MovieDetailSheet>` slides up from bottom
+- Shows: backdrop image, poster, title, genres, overview, cast, directors, budget, IMDb link, like button
+- Close options: X button, backdrop click, Escape key
+
+**"Get recommendations" button:**
+- Fixed on `<LikedTray>` (bottom-left)
+- Disabled when no movies are liked
+- Click → `navigate('/recs', { state: { liked_indices: [...] } })`
+- Passes `liked_indices` via wouter history state (no URL params)
+
+---
+
+#### **`/recs` (Recs.tsx) — AI Recommendations**
+
+**Entry behavior:**
+- Reads `liked_indices` from `window.history.state` (set by wouter navigate from `/browse`)
+- Immediately calls: `POST /recommend` with body:
+  ```json
+  { "liked_indices": [A, B, C], "exclude_indices": [A, B, C], "page": 0 }
+  ```
+- Renders infinite-scroll card grid with recommendations
+- Shows loading spinner until first batch arrives
+
+**Infinite scroll:**
+- Sentinel div at bottom
+- On intersection: `POST /recommend` with `exclude_indices` = liked + all shown recommendations
+- Prevents duplicate recommendations across pages
+- Appends new batch to grid; checks `has_more` to stop scrolling when exhausted
+
+**Like/heart behavior — "Improve recs" loop:**
+- User hearts a recommended movie → added to `likedIndices`
+- Immediately:
+  1. Clear `recs[]` and `exclude_indices` (reset to just liked)
+  2. Call: `POST /recommend` with new `liked_indices` (now includes the new like)
+  3. Grid shows fresh recommendations (better-tuned preference vector)
+- This is the **core feedback loop**: user refines taste → model adapts → better recs
+
+**Unlike behavior:**
+- User unhearts a recommendation
+- Same flow: clear recs, fetch fresh with updated seed
+
+**No search on this page:**
+- Recommendations are AI-driven, not keyword-based
+- To search, go back to `/browse` (via back button or logo click)
+
+---
+
+### 🎨 Component Behaviors
+
+#### **`<MovieCard.tsx>`**
+- Props: `movie: MovieOut`, `liked: boolean`, `onLike: () => void`, `onDoubleClick?: () => void`
+- Displays:
+  - **Poster:** TMDB image or dark placeholder if missing
+  - **Language badge** (top-left, small pill)
+  - **Heart button** (top-right, toggles on click)
+  - **Rating + year** (below poster)
+- On hover:
+  - Lifts with red shadow
+  - Shows subtle "double-click for details" hint (tooltip)
+  - Cursor changes to pointer
+- On double-click: calls `onDoubleClick()` → triggers detail sheet
+
+#### **`<MovieDetailSheet.tsx>`**
+- Animated slide-up from bottom (`translateY(100%) → translateY(0)`)
+- Shows:
+  - **Backdrop image** (full-width blur background)
+  - **Poster** (left side, 200px wide)
+  - **Title + tagline** (bold red accent)
+  - **Genre pills** (interactive, can filter later)
+  - **Overview** (paragraph text, scrollable)
+  - **Credits:** Director, Writers, Cast (chip-style)
+  - **Financials:** Budget, Revenue, Popularity, IMDb link
+  - **Like button:** toggles the movie in `likedIndices`
+- Close options:
+  - X button (top-right)
+  - Backdrop click
+  - Escape key
+- Animation: cubic-bezier spring curve (bouncy)
+
+#### **`<LikedTray.tsx>`**
+- Fixed at bottom of `/browse` page
+- Only visible when `likedMovies.length > 0`
+- Shows:
+  - Up to 5 poster thumbnails (48×64 px, stacked horizontally)
+  - Remove (×) button on thumbnail hover
+  - Red badge showing count ("❤️ 7" if 7 movies liked)
+  - "Get Recommendations" button (red gradient CTA)
+    - Disabled when count = 0
+    - Enabled when count ≥ 1
+    - On click: navigate to `/recs` with `history.state`
+
+#### **`<HUD.tsx>`** (3D home page overlay)
+- Top-left: **Pickflix** logo (Pick = white glow, flix = red glow)
+- Top-right: **Depth %** counter (0–100%, updates as you scroll)
+- Bottom: **"Discover your taste in motion"** tagline (fades as you scroll past 50%)
+- Left edge: Vertical z-axis indicator line (animated)
+
+#### **`<Scene.tsx>`** & **`<ParticleField.tsx>`** (3D rendering)
+- `<Scene>` wraps Three.js `<Canvas>` + camera + lights + bloom post-processing
+- `<ParticleField>` uses `InstancedMesh` to render 3000+ particles in one draw call
+- Per-frame: camera lerp, particle drift (sine waves), raycasting for interactions
+- Hover → glow + scale
+- Click → select (red highlight)
+- Callback: `onHover(movie)` → tooltip, `onSelect(movie)` → detail panel
+
+#### **`<RetroTV.tsx>`** (boot sequence)
+- Phases: `off` → `flicker` → `static` → `clearing` → `on`
+- Each phase animates CSS opacity, canvas noise, gradients
+- When `phase === "on"`:
+  - Shows Pickflix navbar + search bar (decorative)
+  - "What will you watch tonight?" glowing text (clickable)
+  - Calls `onEnter()` → navigate to `/browse`
+
+#### **`<SearchBar.tsx>`**
+- Debounced 300ms input
+- On change: calls `fetchSearchResults(q)`
+- Shows results in a dropdown/modal
+- Clicking a result: parent updates grid
+- Clearing input: reverts to default list
+
+---
+
+## 🎣 Hook Behaviors
+
+### **`useTopMovies()`**
+Manages paginated browse data:
+```ts
+const { movies, lang, loading, hasMore, loadMore, setLang } = useTopMovies();
+```
+
+**State:**
+- `movies[]` — accumulated list of movies across pages
+- `lang` — current language filter
+- `currentPage` — tracks pagination
+
+**Methods:**
+- `loadMore()` → GET next page, append to `movies[]`
+- `setLang(code)` → reset to page 0, clear `movies[]`, fetch new language
+- `sessionRef` counter prevents race conditions (stale response overwrites)
+
+**Behavior:**
+- On mount: auto-fetches page 0 with default settings
+- On language change: clears and refetches
+- Infinite scroll: calls `loadMore()` repeatedly
+
+---
+
+### **`useRecommend(initialIndices?)`**
+Manages recommendations + liked indices:
+```ts
+const { likedIndices, recs, loading, hasMore, addLiked, removeLiked, loadMore } = useRecommend(initialIndices);
+```
+
+**State:**
+- `likedIndices[]` — movies the user likes (seed for recommendations)
+- `recs[]` — current batch of recommendations
+- `shownSet` — all indices shown so far (for `exclude_indices`)
+- `loading` — boolean flag
+
+**Methods:**
+- `addLiked(index)` → add to `likedIndices`, reset recs, fetch fresh
+- `removeLiked(index)` → remove from `likedIndices`, reset recs, fetch fresh
+- `loadMore()` → append `exclude_indices`, fetch next batch
+
+**Behavior:**
+- On mount (if `initialIndices` provided): auto-fetch recommendations
+- Each like/unlike: clear recs, fetch fresh (improved vector)
+- Infinite scroll: append to `exclude_indices`
+
+---
+
+## 🔌 API Usage Patterns
+
+### Browse Page → Top Movies
+```ts
+// On mount or language change
+GET /movies/default?sort=top&page=0&lang=en
+→ { movies: [...], page: 0, has_more: true }
+
+// User scrolls (infinite scroll)
+GET /movies/default?sort=top&page=1&lang=en
+→ { movies: [...], page: 1, has_more: true }
+```
+
+### Browse Page → Search
+```ts
+// User types (debounced 300ms)
+GET /movies/search?q=avatar
+→ { results: [...] }  // Already sorted by match quality
+```
+
+### Browse Page → Movie Detail
+```ts
+// User double-clicks a movie
+GET /movies/42
+→ { 
+  title, original_title, overview, genres[], cast[], 
+  budget, revenue, imdb_id, release_date, runtime, ...
+}
+```
+
+### Recs Page → AI Recommendations
+```ts
+// On mount with liked_indices=[42, 107, 883]
+POST /recommend
+Body: { liked_indices: [42, 107, 883], exclude_indices: [42, 107, 883], page: 0 }
+→ { movies: [...], has_more: true, score: 0.89 }
+
+// User scrolls (infinite scroll)
+POST /recommend
+Body: { liked_indices: [42, 107, 883], exclude_indices: [42, 107, 883, ...D-S], page: 1 }
+→ { movies: [...], has_more: true }
+
+// User likes a recommendation (index 201)
+POST /recommend
+Body: { liked_indices: [42, 107, 883, 201], exclude_indices: [42, 107, 883, 201], page: 0 }
+→ { movies: [...], has_more: true }  // Fresh recs with better seed
+```
+
+---
+
+## 📊 Component Communication & State
 
 ```
-frontend/
-├── artifacts/
-│   └── pickflix/               ← Main React app (Vite + Tailwind v4)
-│       ├── src/
-│       │   ├── App.tsx
-│       │   ├── main.tsx
-│       │   ├── index.css
-│       │   ├── pages/
-│       │   │   ├── Home.tsx
-│       │   │   ├── BrowsePage.tsx
-│       │   │   ├── Recs.tsx
-│       │   │   └── not-found.tsx
-│       │   ├── components/
-│       │   │   ├── HUD.tsx
-│       │   │   ├── Scene.tsx
-│       │   │   ├── ParticleField.tsx
-│       │   │   ├── RetroTV.tsx
-│       │   │   ├── DetailPanel.tsx
-│       │   │   ├── MovieCard.tsx
-│       │   │   ├── MovieDetailSheet.tsx
-│       │   │   ├── LikedTray.tsx
-│       │   │   ├── SearchBar.tsx
-│       │   │   ├── Tooltip.tsx
-│       │   │   └── LoadingScreen.tsx
-│       │   ├── hooks/
-│       │   │   ├── useTopMovies.ts
-│       │   │   └── useRecommend.ts
-│       │   ├── lib/
-│       │   │   ├── api.ts
-│       │   │   └── utils.ts
-│       │   └── data/
-│       │       └── movies.ts
-│       ├── vite.config.ts
-│       ├── package.json
-│       └── index.html
-├── pnpm-workspace.yaml
-└── README.md                    ← this file
+App.tsx (Route provider, QueryClient)
+  ├── Home.tsx (3D landing)
+  │   ├── <Scene> → <ParticleField> (Three.js render)
+  │   ├── <HUD> (logo + depth %)
+  │   ├── <DetailPanel> (sidebar detail on particle click)
+  │   └── <RetroTV> (boot sequence, navigate to /browse)
+  │
+  ├── BrowsePage.tsx (card grid + filters)
+  │   ├── useTopMovies() (pagination state)
+  │   ├── <SearchBar> (query → GET /movies/search)
+  │   ├── <MovieCard> × 20 (poster + like button)
+  │   │   └── onDoubleClick → fetch detail
+  │   ├── <MovieDetailSheet> (full metadata)
+  │   └── <LikedTray> (liked movies + "Get recommendations" CTA)
+  │
+  └── Recs.tsx (recommendation grid + improve loop)
+      ├── useRecommend() (liked + recs state)
+      ├── <MovieCard> × 20 (from recommendations)
+      │   └── onLike → refresh recs with updated seed
+      └── <MovieDetailSheet> (full metadata)
 ```
+
+**State flow:**
+1. User hearts movie on `/browse` → added to local `likedIndices` state in `BrowsePage`
+2. User navigates to `/recs` → `likedIndices` passed via `history.state`
+3. `Recs` page receives `likedIndices`, calls `useRecommend(likedIndices)`
+4. User likes a recommendation → `addLiked()` in `useRecommend` → reset recs, fetch fresh
+5. User goes back to `/browse` → state lost (fresh page load)
+
+---
+
+## 🛠 Tech Stack & Key Dependencies
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| **Framework** | React 19 + Vite 7 | Component-based UI + fast dev server |
+| **3D Graphics** | Three.js | WebGL particle field + camera |
+| **3D React** | @react-three/fiber | Declarative Three.js components |
+| **Effects** | @react-three/postprocessing | Bloom effect on particles |
+| **Routing** | wouter v3 | Lightweight client-side routing |
+| **Styling** | Tailwind CSS v4 | Utility-first CSS + custom glow effects |
+| **Icons** | lucide-react | Consistent icon library (heart, search, X, etc.) |
+| **Data Fetching** | Plain `fetch` | No library needed; simple REST calls |
+| **Query Caching** | @tanstack/react-query | Automatic request deduplication + caching |
+| **Type Safety** | TypeScript 5.9 | Full type checking for API responses |
+| **Fonts** | Space Grotesk (Google Fonts) | Sleek monospace-like heading font |
+| **Package Manager** | pnpm (workspace) | Monorepo structure for frontend + lib |
 
 ---
 
@@ -60,18 +393,53 @@ PORT=3000 BASE_PATH=/ pnpm run dev
 
 ---
 
-## 🧭 Page Routes
+## 🗂 Project Structure
 
-| Route | Component | Description |
-|---|---|---|
-| `/` | `Home.tsx` | 3D particle explorer — 3000 films as glowing orbs |
-| `/browse` | `BrowsePage.tsx` | 2D card grid — real data from `GET /movies/top` |
-| `/recs` | `Recs.tsx` | AI recommendation results — infinite scroll |
-| `*` | `not-found.tsx` | 404 fallback |
+```
+frontend/
+├── artifacts/
+│   └── pickflix/               ← Main React app (Vite + Tailwind v4)
+│       ├── src/
+│       │   ├── App.tsx
+│       │   ├── main.tsx
+│       │   ├── index.css
+│       │   ├── pages/
+│       │   │   ├── Home.tsx             ← 3D particle explorer
+│       │   │   ├── BrowsePage.tsx       ← Card grid + filters + search
+│       │   │   ├── Recs.tsx             ← AI recommendations
+│       │   │   └── not-found.tsx        ← 404 fallback
+│       │   ├── components/
+│       │   │   ├── HUD.tsx              ← Logo + depth counter
+│       │   │   ├── Scene.tsx            ← Three.js canvas wrapper
+│       │   │   ├── ParticleField.tsx    ← Particle renderer
+│       │   │   ├── RetroTV.tsx          ← CRT boot animation
+│       │   │   ├── DetailPanel.tsx      ← Particle detail sidebar
+│       │   │   ├── MovieCard.tsx        ← Reusable card component
+│       │   │   ├── MovieDetailSheet.tsx ← Bottom-sheet full detail
+│       │   │   ├── LikedTray.tsx        ← Liked movies + CTA
+│       │   │   ├── SearchBar.tsx        ← Query input
+│       │   │   ├── Tooltip.tsx          ← Hover tooltip
+│       │   │   └── LoadingScreen.tsx    ← Spinner
+│       │   ├── hooks/
+│       │   │   ├── useTopMovies.ts      ← Browse pagination state
+│       │   │   └── useRecommend.ts      ← Recs + liked state
+│       │   ├── lib/
+│       │   │   ├── api.ts               ← Fetch wrappers
+│       │   │   └── utils.ts             ← Helper functions
+│       │   └── data/
+│       │       └── movies.ts            ← Static 3000-movie fallback
+│       ├── vite.config.ts
+│       ├── package.json
+│       └── index.html
+├── lib/
+│   └── api-client-react/       ← Generated API client (not currently used)
+├── pnpm-workspace.yaml
+└── README.md                    ← this file
+```
 
 ---
 
-## 📄 Important Files
+## 📚 Detailed Component Reference
 
 ### `src/App.tsx`
 Root component. Sets up `QueryClientProvider` and **wouter** `Router` with three routes: `/` → Home, `/browse` → BrowsePage, `/recs` → Recs.
@@ -93,7 +461,7 @@ Root component. Sets up `QueryClientProvider` and **wouter** `Router` with three
 ### `src/pages/BrowsePage.tsx`
 **The 2D home / browse page.**
 
-- On mount calls `GET /movies/top?page=0` via `useTopMovies` and renders a responsive card grid.
+- On mount calls `GET /movies/default?page=0` via `useTopMovies` and renders a responsive card grid.
 - **Language filter pills** (All / EN / KO / HI / FR / JA / ES / UR / DE) re-fetch with `?lang=xx`.
 - **Search bar** (debounced 300ms) calls `GET /movies/search?q=` and switches the grid to search results.
 - **Infinite scroll** via `IntersectionObserver` on a sentinel `<div>` at the bottom.
@@ -132,147 +500,35 @@ Accepts an optional `apiMovies` prop — when provided, it maps `MovieOut[]` fro
 
 ---
 
-### `src/components/ParticleField.tsx`
-The core 3D renderer. Uses `THREE.InstancedMesh` to render 3000+ particles in a single draw call.
-
-- Each frame: updates camera position (smooth lerp toward target), animates each particle with sinusoidal drift, applies hover/select color highlights.
-- Raycasting (`THREE.Raycaster`) detects pointer-over and click — fires `onHover` and `onSelect` callbacks.
-- Selected particles glow red; hovered particles scale up.
+### `src/App.tsx`
+Root component. Sets up `QueryClientProvider` and **wouter** `Router` with three routes: `/` → Home, `/browse` → BrowsePage, `/recs` → Recs.
 
 ---
 
-### `src/components/RetroTV.tsx`
-The cinematic TV boot sequence that appears when the user scrolls to 97% depth.
+## ✨ Summary
 
-**Phase sequence:** `off → flicker → static → clearing → on`
+**Pickflix is a full-stack movie discovery platform** combining:
+- **3D immersive experience** on `/` with particle field + scroll-driven navigation
+- **2D browsing + search** on `/browse` with language filters and infinite scroll  
+- **AI-powered recommendations** on `/recs` with feedback loop for taste refinement
 
-- `flicker`: rapid CSS opacity toggles
-- `static`: canvas noise animation in red tones
-- `clearing`: noise fades out with red glow
-- `on`: breathing radial gradient + reveals the Pickflix UI
+**Key flows:**
+1. User discovers movies via 3D explorer or browse page
+2. Hearts favorite films
+3. Clicks "Get recommendations" → AI refines suggestions based on taste
+4. Infinite-scroll discovery with option to improve recs by liking recommendations
 
-When `phase === "on"`, the TV screen shows:
-1. **Pickflix navbar** (Pick in white, flix in red)
-2. **Search bar** (decorative placeholder)
-3. **"What will you watch tonight?"** — glowing clickable text that calls `onEnter()` → navigates to `/browse`
+**Backend handles:**
+- High-quality movie metadata (235k+ films)
+- FAISS-powered semantic similarity search
+- Fuzzy title search with ranking by relevance
+- Consistent logging for monitoring
 
----
-
-### `src/components/MovieCard.tsx`
-Reusable card component used on Browse and Recs pages.
-
-Props: `movie: MovieOut`, `liked: boolean`, `onLike: () => void`, `onDoubleClick?: () => void`
-
-- Shows TMDB poster at `https://image.tmdb.org/t/p/w300{poster_path}` or a dark placeholder.
-- Language tag badge top-left, heart button top-right.
-- Star rating + year below the poster.
-- On hover: lifts with red shadow; shows a subtle "double-click for details" hint.
-- `onDoubleClick` triggers `fetchMovieDetail(movie_index)` in the parent and opens `<MovieDetailSheet>`.
-
----
-
-### `src/components/MovieDetailSheet.tsx`
-Full-screen bottom-sheet drawer that slides up on double-click.
-
-- Animated via `translateY(100%) → translateY(0)` with a cubic-bezier spring.
-- Shows: **backdrop image** (w1280), **poster** (w500), **title + tagline**, genre pills, overview, director/writers/cast chips, budget/revenue, IMDb link, like button.
-- Closes on: X button, backdrop click, or `Escape` key.
-- `liked` / `onLike` props wire into the parent's `useRecommend` state.
-
----
-
-### `src/components/LikedTray.tsx`
-Fixed bottom overlay on `/browse`. Only renders when `likedMovies.length > 0`.
-
-- Shows up to 5 poster thumbnails (48×64 px) with ×-remove buttons on hover.
-- "Get recommendations" button (disabled when empty) — red gradient CTA.
-
----
-
-### `src/hooks/useTopMovies.ts`
-Manages `GET /movies/top` pagination.
-
-```ts
-const { movies, lang, loading, hasMore, loadMore, setLang } = useTopMovies();
-```
-
-- `loadMore()` appends the next page to `movies[]`.
-- `setLang(code)` resets to page 0, clears the list, and re-fetches for the new language.
-- A `sessionRef` counter prevents stale responses from racing.
-
----
-
-### `src/hooks/useRecommend.ts`
-Manages liked indices, the exclude set, and `POST /recommend` calls.
-
-```ts
-const { likedIndices, recs, loading, hasMore, addLiked, removeLiked, loadMore } = useRecommend(initialIndices);
-```
-
-- `addLiked(index)` → appends to `likedIndices`, clears `shownSet` to just the new likes, resets `recs`, fetches fresh.
-- `removeLiked(index)` → same reset flow.
-- `loadMore()` → POSTs with current `shownSet` as `exclude_indices`, appends results.
-- Auto-fetches on mount when `initialIndices` is non-empty (used by Recs page).
-
----
-
-### `src/lib/api.ts`
-All `fetch` wrappers — plain fetch, no extra libraries.
-
-| Function | Endpoint | Description |
-|---|---|---|
-| `fetchTopMovies({ lang, page })` | `GET /movies/top` | Paginated rated movies |
-| `fetchRecommendations({ liked_indices, exclude_indices, page })` | `POST /recommend` | FAISS-powered recs |
-| `searchMovies(q)` | `GET /movies/search?q=` | Fuzzy title search |
-| `fetchMovieDetail(movie_index)` | `GET /movies/{index}` | Full metadata |
-
-Key interfaces: `MovieOut`, `MovieDetail`, `MovieListResponse`, `SearchResponse`.
-
----
-
-### `src/data/movies.ts`
-Deterministic seeded-random generator that produces 3000 fake `Movie` objects for the 3D particle field (used as fallback when the backend is offline). Fields: `id, title, year, rating, genre, director, description, x, y, z, brightness, size`.
-
----
-
-### `src/index.css`
-Global styles + Tailwind v4 config. Key utilities:
-
-| Class | Effect |
-|---|---|
-| `.glow-red` | `box-shadow` red halo |
-| `.glow-text` | `text-shadow` red glow |
-| `.glass-panel` | Frosted glass card |
-| `.pulse-dot` | Pulsing animated dot |
-
-CSS variables set the color system: primary red `hsl(0 90% 55%)`, dark backgrounds.
-
----
-
-## 🔌 Backend API (runs at `localhost:8000`)
-
-| Method | Path | Used by |
-|---|---|---|
-| `GET` | `/movies/top?page=0&lang=en` | BrowsePage, useTopMovies |
-| `POST` | `/recommend` | useRecommend |
-| `GET` | `/movies/search?q=` | SearchBar in BrowsePage |
-| `GET` | `/movies/{index}` | MovieDetailSheet |
-| `GET` | `/health` | Liveness probe |
-
----
-
-## 🛠 Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | React 19 + Vite 7 |
-| 3D | Three.js · @react-three/fiber · @react-three/postprocessing |
-| Routing | wouter v3 |
-| Styling | Tailwind CSS v4 (via `@tailwindcss/vite`) |
-| Icons | lucide-react |
-| Fonts | Space Grotesk (Google Fonts) |
-| Package manager | pnpm (workspace monorepo) |
-| Type checking | TypeScript 5.9 |
+**Frontend manages:**
+- State via custom hooks (`useTopMovies`, `useRecommend`)
+- Three.js rendering with @react-three/fiber
+- Responsive card grid UI with Tailwind CSS
+- Seamless routing between discovery and recommendation modes
 
 ---
 
