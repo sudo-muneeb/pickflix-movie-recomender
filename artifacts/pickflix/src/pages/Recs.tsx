@@ -25,6 +25,8 @@ export default function Recs() {
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
+  const [seedPosters, setSeedPosters] = useState<Record<number, string | null>>({});
+
   // Detail sheet
   const [detailIndex, setDetailIndex] = useState<number | null>(null);
   const [detailMovie, setDetailMovie] = useState<MovieDetail | null>(null);
@@ -48,6 +50,41 @@ export default function Recs() {
     setDetailIndex(null);
     setDetailMovie(null);
   }, []);
+
+  useEffect(() => {
+    if (likedIndices.length === 0) {
+      setSeedPosters({});
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadSeedPosters = async () => {
+      const posters = await Promise.all(
+        likedIndices.map(async (idx) => {
+          const existing = recs.find((r) => r.movie_index === idx)?.poster_path ?? null;
+          if (existing) return [idx, existing] as const;
+
+          try {
+            const detail = await fetchMovieDetail(idx);
+            return [idx, detail.poster_path ?? null] as const;
+          } catch {
+            return [idx, null] as const;
+          }
+        })
+      );
+
+      if (!cancelled) {
+        setSeedPosters(Object.fromEntries(posters));
+      }
+    };
+
+    loadSeedPosters();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [likedIndices, recs]);
 
   // Infinite scroll via IntersectionObserver
   useEffect(() => {
@@ -80,7 +117,7 @@ export default function Recs() {
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        <Link href="/">
+        <Link href="/browse">
           <a
             className="flex items-center gap-2 transition-colors text-sm"
             style={{ color: "rgba(255,255,255,0.45)" }}
@@ -109,9 +146,9 @@ export default function Recs() {
           </span>
           <div className="flex gap-2">
             {likedIndices.map((idx) => {
-              const movie = recs.find((r) => r.movie_index === idx);
-              const poster = movie?.poster_path
-                ? `${TMDB_BASE}${movie.poster_path}`
+              const posterPath = seedPosters[idx] ?? null;
+              const poster = posterPath
+                ? `${TMDB_BASE}${posterPath}`
                 : null;
               return (
                 <div
@@ -171,9 +208,9 @@ export default function Recs() {
 
         {/* Grid — responsive, 4 columns on wide screens */}
         <div
-          className="grid gap-4"
+          className="grid gap-6"
           style={{
-            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
           }}
         >
           {recs.map((movie) => (

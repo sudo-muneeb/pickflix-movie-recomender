@@ -8,8 +8,10 @@ export interface MovieOut {
   avg_rating: number;
   vote_count: number;
   poster_path: string | null;
-  score?: number;
+  score?: number | null;
 }
+
+export type TopMoviesSort = "top" | "random" | "latest" | "decade";
 
 export interface MovieListResponse {
   movies: MovieOut[];
@@ -61,14 +63,17 @@ export async function fetchMovieDetail(movie_index: number): Promise<MovieDetail
 }
 
 export async function fetchTopMovies({
+  sort = "random",
   lang,
-  page,
+  page = 0,
 }: {
+  sort?: TopMoviesSort;
   lang?: string | null;
-  page: number;
+  page?: number;
 }): Promise<MovieListResponse> {
-  const params = new URLSearchParams({ page: String(page) });
+  const params = new URLSearchParams({ sort });
   if (lang) params.set("lang", lang);
+  if (sort !== "random") params.set("page", String(page));
   const res = await fetch(`${BASE}/movies/top?${params.toString()}`);
   if (!res.ok) throw new Error(`fetchTopMovies: ${res.status}`);
   return res.json();

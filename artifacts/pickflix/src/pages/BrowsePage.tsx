@@ -147,22 +147,8 @@ export default function BrowsePage() {
         <div className="flex items-center gap-4">
           {/* Back to 3D */}
           <Link href="/">
-            <a
-              className="flex items-center gap-1.5 text-xs transition-colors shrink-0"
-              style={{ color: "rgba(255,255,255,0.3)" }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color =
-                  "rgba(255,255,255,0.7)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color =
-                  "rgba(255,255,255,0.3)";
-              }}
-            >
-              <ArrowLeft size={13} />
-              <span className="uppercase tracking-wider">Explore 3D</span>
-            </a>
-          </Link>
+           
+    
 
           {/* Pickflix logo */}
           <div className="flex items-baseline gap-0.5 select-none">
@@ -192,7 +178,7 @@ export default function BrowsePage() {
             >
               flix
             </span>
-          </div>
+          </div>      </Link>
 
           {/* Search bar */}
           <div className="flex-1 relative max-w-md mx-auto">
@@ -318,7 +304,7 @@ export default function BrowsePage() {
         <div
           className="grid gap-6"
           style={{
-            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
           }}
         >
           {displayMovies.map((movie) => (
