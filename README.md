@@ -1,331 +1,279 @@
-# Pickflix - Movie Recommender
+# Pickflix — AI Movie Recommender Frontend
 
-A dark, cinematic 3D movie recommendation and exploration platform built with a modern TypeScript monorepo.
-
-## 📋 Project Structure
-
-```
-pickflix-movie-recomender/
-├── artifacts/                          # Deployable applications
-│   ├── api-server/                     # Express backend API
-│   │   ├── src/
-│   │   │   ├── app.ts                  # Express app setup
-│   │   │   ├── index.ts                # Server entry point
-│   │   │   ├── lib/logger.ts           # Pino logging
-│   │   │   ├── middlewares/            # Express middleware
-│   │   │   └── routes/
-│   │   │       ├── health.ts           # Health check endpoint
-│   │   │       └── index.ts
-│   │   ├── build.mjs                   # esbuild configuration
-│   │   └── package.json
-│   │
-│   ├── cinescope/                      # Main 3D movie explorer UI
-│   │   ├── src/
-│   │   │   ├── App.tsx                 # Root component
-│   │   │   ├── main.tsx                # React entry point
-│   │   │   ├── pages/
-│   │   │   │   ├── Home.tsx            # Main landing page
-│   │   │   │   └── not-found.tsx
-│   │   │   ├── components/
-│   │   │   │   ├── Scene.tsx           # Three.js canvas wrapper
-│   │   │   │   ├── ParticleField.tsx   # 3D particle system (3000 movies)
-│   │   │   │   ├── HUD.tsx             # Overlay UI layer
-│   │   │   │   ├── DetailPanel.tsx     # Movie details sidebar
-│   │   │   │   ├── SearchBar.tsx       # Search with autocomplete
-│   │   │   │   ├── Tooltip.tsx         # Hover tooltips
-│   │   │   │   ├── RetroTV.tsx         # Retro TV frame effect
-│   │   │   │   ├── LoadingScreen.tsx   # Pulsing dots loader
-│   │   │   │   └── ui/                 # Shadcn components
-│   │   │   ├── hooks/
-│   │   │   │   ├── use-mobile.tsx      # Mobile detection
-│   │   │   │   ├── use-toast.ts        # Toast notifications
-│   │   │   │   └── useSound.ts         # Audio playback
-│   │   │   ├── data/
-│   │   │   │   └── movies.ts           # 3000 movie dataset
-│   │   │   └── lib/utils.ts            # Utility functions
-│   │   ├── vite.config.ts              # Vite config (requires PORT, BASE_PATH)
-│   │   ├── index.html
-│   │   └── package.json
-│
-├── lib/                                # Shared libraries
-│   ├── api-client-react/               # React API client hook
-│   │   ├── src/
-│   │   │   ├── custom-fetch.ts         # Custom fetch wrapper
-│   │   │   ├── index.ts                # Main export
-│   │   │   └── generated/              # Orval-generated code
-│   │   │       ├── api.ts              # API hooks
-│   │   │       └── api.schemas.ts      # Generated types
-│   │   └── package.json
-│   │
-│   ├── api-spec/                       # OpenAPI specification
-│   │   ├── openapi.yaml                # API definition
-│   │   ├── orval.config.ts             # Code generation config
-│   │   └── package.json
-│   │
-│   ├── api-zod/                        # Zod validation schemas
-│   │   ├── src/
-│   │   │   ├── index.ts
-│   │   │   └── generated/
-│   │   │       ├── api.ts              # Auto-generated schemas
-│   │   │       └── types/
-│   │   └── package.json
-│   │
-│   └── db/                             # Database schema & ORM
-│       ├── src/
-│       │   ├── index.ts
-│       │   └── schema/index.ts         # Drizzle ORM schema
-│       ├── drizzle.config.ts
-│       └── package.json
-│
-├── scripts/                            # Utility scripts
-│   ├── src/hello.ts
-│   └── package.json
-│
-├── pnpm-workspace.yaml                 # Monorepo configuration
-├── pnpm-lock.yaml                      # Dependency lockfile (233KB)
-├── tsconfig.base.json                  # Shared TypeScript config
-├── tsconfig.json
-├── package.json                        # Root workspace package
-└── .gitignore
-```
-
-## 🛠️ Tech Stack
-
-| Layer | Technologies |
-|-------|--------------|
-| **Frontend** | React 18 + TypeScript + Vite |
-| **3D Graphics** | Three.js + React Three Fiber + Postprocessing |
-| **UI Components** | Shadcn UI + Tailwind CSS |
-| **Backend** | Express 5 + TypeScript |
-| **Logging** | Pino |
-| **Database** | PostgreSQL + Drizzle ORM |
-| **API Definition** | OpenAPI + Zod + Orval |
-| **Validation** | Zod + drizzle-zod |
-| **Monorepo Tool** | pnpm workspaces |
-| **Code Generation** | Orval (from OpenAPI spec) |
-| **Build Tool** | esbuild (API) + Vite (Frontend) |
-| **Node.js** | v24 |
-| **TypeScript** | 5.9 |
-
-## 📦 Key Artifacts
-
-### CineScope - 3D Movie Explorer
-A dark, cinematic landing page and movie recommendation experience.
-
-**Features:**
-- 3000 glowing red particle dots in 3D space (one per movie)
-- Depth-layered particles (front = bright/large, back = faint/small)
-- Mouse parallax effect — camera shifts with cursor position
-- Scroll to fly forward through the particle field
-- Interactive hover tooltips showing title + rating
-- Click to open detail panel with full movie information
-- Search bar with autocomplete to find and fly to any film
-- Bloom postprocessing effect for neon glow
-- Fog effect for depth perception
-- Slow particle drift animation
-- Instanced meshes for 60fps performance
-- WebGL error boundary for graceful degradation
-
-**Tech:** React + Vite + React Three Fiber + Three.js + @react-three/postprocessing
-
-### API Server
-Shared Express 5 backend providing RESTful APIs.
-
-**Currently:**
-- `/api/healthz` — Health check endpoint
-
-**Tech:** Express 5 + TypeScript + Pino + esbuild
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 24+
-- pnpm (package manager)
-
-### Installation
-
-```bash
-# Install pnpm globally
-npm install -g pnpm
-
-# Install all workspace dependencies
-pnpm install
-```
-
-### Environment Variables
-
-Create a `.env` file or export these variables:
-
-```bash
-export PORT=3000           # Required for Vite builds
-export BASE_PATH=/         # Required for Vite builds
-```
-
-## 📝 Available Commands
-
-### Workspace Commands
-
-```bash
-# Full typecheck across all packages
-pnpm run typecheck
-
-# Build everything with typecheck
-pnpm run build
-
-# Regenerate API hooks and Zod schemas from OpenAPI spec
-pnpm --filter @workspace/api-spec run codegen
-
-# Push database schema changes (dev only)
-pnpm --filter @workspace/db run push
-```
-
-### Running Services
-
-```bash
-# Run API server locally (dev mode)
-pnpm --filter @workspace/api-server run dev
-
-# Run CineScope frontend (dev mode)
-cd artifacts/cinescope && PORT=3000 BASE_PATH=/ pnpm run dev
-```
-
-### Quick Start
-
-```bash
-# Terminal 1: Run API server
-PORT=3000 BASE_PATH=/ pnpm --filter @workspace/api-server run dev
-
-# Terminal 2: Run CineScope UI
-PORT=3000 BASE_PATH=/ pnpm --filter @workspace/cinescope run dev
-```
-
-## 📊 Repository Size Breakdown
-
-| Item | Size | Notes |
-|------|------|-------|
-| **.local/** (pnpm cache) | **586MB** | ⚠️ Can be deleted — regenerated on `pnpm install` |
-| Source code | ~8MB | Keep |
-| .git (history) | ~2MB | Keep |
-| pnpm-lock.yaml | 233KB | Keep — reproducible dependencies |
-| **Total** | **594MB** | After cleanup: **~8MB** |
-
-### Clean Up Cache
-
-```bash
-rm -rf .local/
-```
-
-This removes the pnpm cache and reduces repo size to ~8MB. Dependencies will reinstall automatically on next `pnpm install`.
-
-## 🏗️ Build Artifacts
-
-After running `pnpm run build`:
-
-```
-artifacts/
-├── api-server/dist/          # CJS bundles
-│   ├── index.mjs             # 1.4MB (with source map)
-│   ├── pino-*.mjs            # Logger bundles
-│   └── *.mjs.map
-├── cinescope/dist/           # Production frontend
-│   ├── index.html
-│   └── assets/
-│       ├── index-*.js        # 1.2MB gzipped
-│       └── index-*.css       # 90KB
-
-```
-
-## 🔧 Development Workflow
-
-### Adding a New API Endpoint
-
-1. Update `lib/api-spec/openapi.yaml` with the new endpoint definition
-2. Run `pnpm --filter @workspace/api-spec run codegen`
-3. Implement endpoint in `artifacts/api-server/src/routes/`
-4. Update Zod schemas in `lib/api-zod/` if needed
-
-### Working with Database
-
-1. Update schema in `lib/db/src/schema/index.ts`
-2. Run `pnpm --filter @workspace/db run push`
-3. Schemas auto-generate Zod validators
-
-### Updating Dependencies
-
-```bash
-# Check for outdated packages
-pnpm outdated
-
-# Update specific package
-pnpm --filter @workspace/cinescope update react@latest
-
-# Update all
-pnpm -r update
-```
-
-## 📚 Code Organization
-
-### Monorepo Conventions
-
-- **artifacts/** — Applications that can be deployed independently
-- **lib/** — Reusable libraries and shared code
-- **scripts/** — Build and utility scripts
-- Each package has its own `package.json` and `tsconfig.json`
-- Use pnpm filters to run commands in specific workspaces
-
-### TypeScript
-
-- Shared base config in `tsconfig.base.json`
-- Each package extends and customizes as needed
-- Full project typecheck: `pnpm run typecheck`
-
-### Styling
-
-- Tailwind CSS for utility-first styling
-- Shadcn UI components for consistent design
-- Dark theme optimized
-
-## 🚨 Common Issues
-
-### Build fails with "PORT environment variable is required"
-
-**Solution:** Set `PORT` and `BASE_PATH` before building:
-
-```bash
-PORT=3000 BASE_PATH=/ pnpm run build
-```
-
-### pnpm command not found
-
-**Solution:** Install pnpm globally:
-
-```bash
-npm install -g pnpm
-```
-
-### Large repository size
-
-**Solution:** Remove pnpm cache:
-
-```bash
-rm -rf .local/
-```
-
-## 📄 License
-
-MIT
-
-## 🤝 Contributing
-
-1. Create a feature branch from `main`
-2. Make your changes
-3. Run `pnpm run typecheck` to validate
-4. Run `pnpm run build` to ensure builds pass
-5. Submit a pull request
+A dark, cinematic movie discovery platform. The 3D particle explorer lets you fly through thousands of films; the browse page fetches real data from the FastAPI backend; double-clicking any card slides up a full detail sheet.
 
 ---
 
-**Last Updated:** April 19, 2026  
-**Node.js:** v24  
-**TypeScript:** 5.9  
-**pnpm:** Latest
+## 🗂 Project Structure
+
+```
+frontend/
+├── artifacts/
+│   └── pickflix/               ← Main React app (Vite + Tailwind v4)
+│       ├── src/
+│       │   ├── App.tsx
+│       │   ├── main.tsx
+│       │   ├── index.css
+│       │   ├── pages/
+│       │   │   ├── Home.tsx
+│       │   │   ├── BrowsePage.tsx
+│       │   │   ├── Recs.tsx
+│       │   │   └── not-found.tsx
+│       │   ├── components/
+│       │   │   ├── HUD.tsx
+│       │   │   ├── Scene.tsx
+│       │   │   ├── ParticleField.tsx
+│       │   │   ├── RetroTV.tsx
+│       │   │   ├── DetailPanel.tsx
+│       │   │   ├── MovieCard.tsx
+│       │   │   ├── MovieDetailSheet.tsx
+│       │   │   ├── LikedTray.tsx
+│       │   │   ├── SearchBar.tsx
+│       │   │   ├── Tooltip.tsx
+│       │   │   └── LoadingScreen.tsx
+│       │   ├── hooks/
+│       │   │   ├── useTopMovies.ts
+│       │   │   └── useRecommend.ts
+│       │   ├── lib/
+│       │   │   ├── api.ts
+│       │   │   └── utils.ts
+│       │   └── data/
+│       │       └── movies.ts
+│       ├── vite.config.ts
+│       ├── package.json
+│       └── index.html
+├── pnpm-workspace.yaml
+└── README.md                    ← this file
+```
+
+---
+
+## 🚀 Running Locally
+
+```bash
+# From the frontend/ directory
+cd artifacts/pickflix
+PORT=3000 BASE_PATH=/ pnpm run dev
+```
+
+> Backend must be running at `http://localhost:8000` (see backend README).
+
+---
+
+## 🧭 Page Routes
+
+| Route | Component | Description |
+|---|---|---|
+| `/` | `Home.tsx` | 3D particle explorer — 3000 films as glowing orbs |
+| `/browse` | `BrowsePage.tsx` | 2D card grid — real data from `GET /movies/top` |
+| `/recs` | `Recs.tsx` | AI recommendation results — infinite scroll |
+| `*` | `not-found.tsx` | 404 fallback |
+
+---
+
+## 📄 Important Files
+
+### `src/App.tsx`
+Root component. Sets up `QueryClientProvider` and **wouter** `Router` with three routes: `/` → Home, `/browse` → BrowsePage, `/recs` → Recs.
+
+---
+
+### `src/pages/Home.tsx`
+**The 3D landing page.**
+
+- Mounts a Three.js canvas via `<Scene>` which renders 3000 particles as glowing red orbs using instanced meshes.
+- Wheel scroll drives a smooth camera Z-offset (`cameraZOffset`) so scrolling flies you through the particle field.
+- Mouse position drives subtle parallax (`mouseParallax`).
+- Hovering a particle shows a `<Tooltip>`. Clicking opens `<DetailPanel>` in a slide-in sidebar.
+- Scrolling all the way to 97% depth triggers `<RetroTV>` — a CRT boot animation that reveals the Pickflix TV screen with a "What will you watch tonight?" CTA. Clicking it navigates to `/browse`.
+- `<HUD>` shows the **Pickflix** logo top-left and a depth % top-right. No search bar here.
+
+---
+
+### `src/pages/BrowsePage.tsx`
+**The 2D home / browse page.**
+
+- On mount calls `GET /movies/top?page=0` via `useTopMovies` and renders a responsive card grid.
+- **Language filter pills** (All / EN / KO / HI / FR / JA / ES / UR / DE) re-fetch with `?lang=xx`.
+- **Search bar** (debounced 300ms) calls `GET /movies/search?q=` and switches the grid to search results.
+- **Infinite scroll** via `IntersectionObserver` on a sentinel `<div>` at the bottom.
+- **Double-clicking** any `<MovieCard>` opens `<MovieDetailSheet>` — a slide-up bottom drawer with full film metadata fetched from `GET /movies/{index}`.
+- **Heart button** on each card adds/removes the movie from `likedIndices`.
+- **`<LikedTray>`** fixed at the bottom shows liked-movie thumbnails + a "Get recommendations" button → navigates to `/recs` passing `liked_indices` via `history.state`.
+
+---
+
+### `src/pages/Recs.tsx`
+**The AI recommendations page.**
+
+- Reads `liked_indices` from `window.history.state` (set by wouter navigate).
+- Calls `POST /recommend` with `{ liked_indices, exclude_indices }` on mount via `useRecommend`.
+- Renders a responsive 4-column card grid.
+- IntersectionObserver loads more batches (appending to `exclude_indices` to avoid duplicates).
+- Liking a rec card triggers a fresh recommendation fetch with the updated seed set — the "improve my recs" loop.
+- Double-clicking any card opens the same `<MovieDetailSheet>`.
+
+---
+
+### `src/components/HUD.tsx`
+Overlay for the 3D landing page. Shows:
+- **Top-left:** `Pick` (white glow) + `flix` (red glow) logotype
+- **Top-right:** Depth % counter (tracks scroll position)
+- **Bottom:** "Discover your taste in motion" tagline that fades as you scroll
+- **Left edge:** Vertical z-axis indicator line
+- No search bar — search lives on `/browse`
+
+---
+
+### `src/components/Scene.tsx`
+Thin wrapper around `@react-three/fiber` `<Canvas>`. Sets up camera, fog, ambient light, bloom post-processing (`@react-three/postprocessing`), and renders `<ParticleField>`.
+
+Accepts an optional `apiMovies` prop — when provided, it maps `MovieOut[]` from the backend into the `Movie` shape used by ParticleField (computing spatial x/y/z positions from `movie_index`). Falls back to the static 3000-entry `MOVIES` dataset when no API data is available.
+
+---
+
+### `src/components/ParticleField.tsx`
+The core 3D renderer. Uses `THREE.InstancedMesh` to render 3000+ particles in a single draw call.
+
+- Each frame: updates camera position (smooth lerp toward target), animates each particle with sinusoidal drift, applies hover/select color highlights.
+- Raycasting (`THREE.Raycaster`) detects pointer-over and click — fires `onHover` and `onSelect` callbacks.
+- Selected particles glow red; hovered particles scale up.
+
+---
+
+### `src/components/RetroTV.tsx`
+The cinematic TV boot sequence that appears when the user scrolls to 97% depth.
+
+**Phase sequence:** `off → flicker → static → clearing → on`
+
+- `flicker`: rapid CSS opacity toggles
+- `static`: canvas noise animation in red tones
+- `clearing`: noise fades out with red glow
+- `on`: breathing radial gradient + reveals the Pickflix UI
+
+When `phase === "on"`, the TV screen shows:
+1. **Pickflix navbar** (Pick in white, flix in red)
+2. **Search bar** (decorative placeholder)
+3. **"What will you watch tonight?"** — glowing clickable text that calls `onEnter()` → navigates to `/browse`
+
+---
+
+### `src/components/MovieCard.tsx`
+Reusable card component used on Browse and Recs pages.
+
+Props: `movie: MovieOut`, `liked: boolean`, `onLike: () => void`, `onDoubleClick?: () => void`
+
+- Shows TMDB poster at `https://image.tmdb.org/t/p/w300{poster_path}` or a dark placeholder.
+- Language tag badge top-left, heart button top-right.
+- Star rating + year below the poster.
+- On hover: lifts with red shadow; shows a subtle "double-click for details" hint.
+- `onDoubleClick` triggers `fetchMovieDetail(movie_index)` in the parent and opens `<MovieDetailSheet>`.
+
+---
+
+### `src/components/MovieDetailSheet.tsx`
+Full-screen bottom-sheet drawer that slides up on double-click.
+
+- Animated via `translateY(100%) → translateY(0)` with a cubic-bezier spring.
+- Shows: **backdrop image** (w1280), **poster** (w500), **title + tagline**, genre pills, overview, director/writers/cast chips, budget/revenue, IMDb link, like button.
+- Closes on: X button, backdrop click, or `Escape` key.
+- `liked` / `onLike` props wire into the parent's `useRecommend` state.
+
+---
+
+### `src/components/LikedTray.tsx`
+Fixed bottom overlay on `/browse`. Only renders when `likedMovies.length > 0`.
+
+- Shows up to 5 poster thumbnails (48×64 px) with ×-remove buttons on hover.
+- "Get recommendations" button (disabled when empty) — red gradient CTA.
+
+---
+
+### `src/hooks/useTopMovies.ts`
+Manages `GET /movies/top` pagination.
+
+```ts
+const { movies, lang, loading, hasMore, loadMore, setLang } = useTopMovies();
+```
+
+- `loadMore()` appends the next page to `movies[]`.
+- `setLang(code)` resets to page 0, clears the list, and re-fetches for the new language.
+- A `sessionRef` counter prevents stale responses from racing.
+
+---
+
+### `src/hooks/useRecommend.ts`
+Manages liked indices, the exclude set, and `POST /recommend` calls.
+
+```ts
+const { likedIndices, recs, loading, hasMore, addLiked, removeLiked, loadMore } = useRecommend(initialIndices);
+```
+
+- `addLiked(index)` → appends to `likedIndices`, clears `shownSet` to just the new likes, resets `recs`, fetches fresh.
+- `removeLiked(index)` → same reset flow.
+- `loadMore()` → POSTs with current `shownSet` as `exclude_indices`, appends results.
+- Auto-fetches on mount when `initialIndices` is non-empty (used by Recs page).
+
+---
+
+### `src/lib/api.ts`
+All `fetch` wrappers — plain fetch, no extra libraries.
+
+| Function | Endpoint | Description |
+|---|---|---|
+| `fetchTopMovies({ lang, page })` | `GET /movies/top` | Paginated rated movies |
+| `fetchRecommendations({ liked_indices, exclude_indices, page })` | `POST /recommend` | FAISS-powered recs |
+| `searchMovies(q)` | `GET /movies/search?q=` | Fuzzy title search |
+| `fetchMovieDetail(movie_index)` | `GET /movies/{index}` | Full metadata |
+
+Key interfaces: `MovieOut`, `MovieDetail`, `MovieListResponse`, `SearchResponse`.
+
+---
+
+### `src/data/movies.ts`
+Deterministic seeded-random generator that produces 3000 fake `Movie` objects for the 3D particle field (used as fallback when the backend is offline). Fields: `id, title, year, rating, genre, director, description, x, y, z, brightness, size`.
+
+---
+
+### `src/index.css`
+Global styles + Tailwind v4 config. Key utilities:
+
+| Class | Effect |
+|---|---|
+| `.glow-red` | `box-shadow` red halo |
+| `.glow-text` | `text-shadow` red glow |
+| `.glass-panel` | Frosted glass card |
+| `.pulse-dot` | Pulsing animated dot |
+
+CSS variables set the color system: primary red `hsl(0 90% 55%)`, dark backgrounds.
+
+---
+
+## 🔌 Backend API (runs at `localhost:8000`)
+
+| Method | Path | Used by |
+|---|---|---|
+| `GET` | `/movies/top?page=0&lang=en` | BrowsePage, useTopMovies |
+| `POST` | `/recommend` | useRecommend |
+| `GET` | `/movies/search?q=` | SearchBar in BrowsePage |
+| `GET` | `/movies/{index}` | MovieDetailSheet |
+| `GET` | `/health` | Liveness probe |
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | React 19 + Vite 7 |
+| 3D | Three.js · @react-three/fiber · @react-three/postprocessing |
+| Routing | wouter v3 |
+| Styling | Tailwind CSS v4 (via `@tailwindcss/vite`) |
+| Icons | lucide-react |
+| Fonts | Space Grotesk (Google Fonts) |
+| Package manager | pnpm (workspace monorepo) |
+| Type checking | TypeScript 5.9 |
+
+---
+
+**Last updated:** April 2026

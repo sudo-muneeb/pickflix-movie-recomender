@@ -4,6 +4,7 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { KernelSize } from "postprocessing";
 import { ParticleField } from "./ParticleField";
 import { Movie, MOVIES } from "../data/movies";
+import type { MovieOut } from "../lib/api";
 import * as THREE from "three";
 
 interface SceneProps {
@@ -12,6 +13,7 @@ interface SceneProps {
   selectedMovie: Movie | null;
   cameraZOffset: number;
   mouseParallax: { x: number; y: number };
+  apiMovies?: MovieOut[];
 }
 
 class WebGLErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -68,13 +70,33 @@ function FogPlane() {
   );
 }
 
+// Map API movies to the Movie shape used by ParticleField
+function apiMoviesToScene(apiMovies: MovieOut[]): Movie[] {
+  return apiMovies.map((m, i) => ({
+    id: m.movie_index,
+    title: m.title,
+    year: m.year ?? 0,
+    rating: m.avg_rating,
+    genre: [m.language ?? "?"],
+    director: "",
+    description: "",
+    x: (Math.sin(m.movie_index * 2.3) * 60),
+    y: (Math.cos(m.movie_index * 1.7) * 40),
+    z: ((i / Math.max(apiMovies.length - 1, 1)) - 0.5) * 200,
+    brightness: 0.3 + Math.min(m.avg_rating / 10, 0.7),
+    size: 0.4 + Math.min(m.vote_count / 5000, 1.2),
+  }));
+}
+
 export function Scene({
   onHover,
   onSelect,
   selectedMovie,
   cameraZOffset,
   mouseParallax,
+  apiMovies,
 }: SceneProps) {
+  const movies = apiMovies && apiMovies.length > 0 ? apiMoviesToScene(apiMovies) : MOVIES;
   return (
     <WebGLErrorBoundary>
       <Canvas
@@ -97,7 +119,7 @@ export function Scene({
         <ambientLight intensity={0.1} />
         <Suspense fallback={null}>
           <ParticleField
-            movies={MOVIES}
+            movies={movies}
             onHover={onHover}
             onSelect={onSelect}
             selectedMovie={selectedMovie}

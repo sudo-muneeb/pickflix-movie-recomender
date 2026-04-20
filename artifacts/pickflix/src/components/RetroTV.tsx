@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { Search } from "lucide-react";
 
 type TVPhase = "off" | "flicker" | "static" | "clearing" | "on";
 
 interface RetroCRTProps {
   visible: boolean;
+  onEnter?: () => void;
 }
 
 function useNoiseCanvas(phase: TVPhase) {
@@ -101,7 +103,7 @@ function useNoiseCanvas(phase: TVPhase) {
   return canvasRef;
 }
 
-export function RetroTV({ visible }: RetroCRTProps) {
+export function RetroTV({ visible, onEnter }: RetroCRTProps) {
   const [phase, setPhase] = useState<TVPhase>("off");
   const [flickerOn, setFlickerOn] = useState(false);
   const [tvVisible, setTvVisible] = useState(false);
@@ -262,61 +264,130 @@ export function RetroTV({ visible }: RetroCRTProps) {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    justifyContent: "center",
-                    padding: "24px",
+                    justifyContent: "space-between",
+                    padding: "20px 24px 20px",
                     animation: "textReveal 0.8s ease-out forwards",
                   }}
                 >
-                  <div
-                    style={{
+                  {/* ── Navbar ── */}
+                  <div style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingBottom: "12px",
+                    borderBottom: "1px solid rgba(255,42,42,0.15)",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+                      <span style={{
+                        fontFamily: "'Space Grotesk', sans-serif",
+                        fontSize: "18px",
+                        fontWeight: 700,
+                        color: "rgba(255,255,255,0.95)",
+                        textShadow: "0 0 18px rgba(255,42,42,0.9), 0 0 40px rgba(255,42,42,0.4)",
+                        letterSpacing: "-0.01em",
+                      }}>Pick</span>
+                      <span style={{
+                        fontFamily: "'Space Grotesk', sans-serif",
+                        fontSize: "18px",
+                        fontWeight: 700,
+                        color: "rgba(220,38,38,1)",
+                        textShadow: "0 0 18px rgba(255,42,42,1), 0 0 50px rgba(255,42,42,0.6)",
+                        letterSpacing: "-0.01em",
+                      }}>flix</span>
+                    </div>
+                    <div style={{
+                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontSize: "8px",
+                      letterSpacing: "0.35em",
+                      textTransform: "uppercase",
+                      color: "rgba(255,80,80,0.4)",
+                    }}>AI · Discover</div>
+                  </div>
+
+                  {/* ── Search bar ── */}
+                  <div style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "7px 12px",
+                    borderRadius: "20px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,42,42,0.2)",
+                    boxShadow: "0 0 16px rgba(255,42,42,0.06)",
+                  }}>
+                    <Search size={11} color="rgba(255,80,80,0.4)" />
+                    <span style={{
                       fontFamily: "'Space Grotesk', sans-serif",
                       fontSize: "11px",
-                      letterSpacing: "0.4em",
-                      textTransform: "uppercase",
-                      color: "rgba(255,80,80,0.5)",
-                      marginBottom: "16px",
-                      fontWeight: 300,
-                    }}
-                  >
-                    CineScope · AI
+                      color: "rgba(255,255,255,0.2)",
+                      letterSpacing: "0.03em",
+                    }}>Search movies, genres, directors…</span>
                   </div>
-                  <div
-                    style={{
-                      fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: "22px",
-                      fontWeight: 500,
-                      color: "rgba(255, 200, 200, 0.92)",
-                      textAlign: "center",
-                      lineHeight: 1.4,
-                      textShadow:
-                        "0 0 20px rgba(255,42,42,0.8), 0 0 50px rgba(255,42,42,0.4)",
-                      letterSpacing: "0.02em",
-                    }}
+
+                  {/* ── CTA ── */}
+                  <button
+                    onClick={onEnter}
                     data-testid="tv-tagline"
-                  >
-                    What will you watch tonight?
-                  </div>
-                  <div
                     style={{
-                      marginTop: "24px",
-                      width: "60px",
-                      height: "1px",
-                      background:
-                        "linear-gradient(to right, transparent, rgba(255,42,42,0.6), transparent)",
+                      background: "none",
+                      border: "none",
+                      cursor: onEnter ? "pointer" : "default",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: 0,
                     }}
-                  />
-                  <div
-                    style={{
-                      marginTop: "16px",
+                  >
+                    <span style={{
                       fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: "10px",
-                      letterSpacing: "0.3em",
-                      color: "rgba(255,100,100,0.3)",
-                      textTransform: "uppercase",
+                      fontSize: "19px",
+                      fontWeight: 500,
+                      color: "rgba(255,210,210,0.95)",
+                      textAlign: "center",
+                      lineHeight: 1.35,
+                      textShadow: "0 0 20px rgba(255,42,42,0.9), 0 0 55px rgba(255,42,42,0.5)",
+                      letterSpacing: "0.01em",
+                      transition: "text-shadow 0.2s",
                     }}
-                  >
-                    Scroll back to explore
-                  </div>
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.textShadow =
+                        "0 0 28px rgba(255,42,42,1), 0 0 70px rgba(255,42,42,0.8)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.textShadow =
+                        "0 0 20px rgba(255,42,42,0.9), 0 0 55px rgba(255,42,42,0.5)";
+                    }}
+                    >
+                      What will you watch tonight?
+                    </span>
+                    <div style={{
+                      width: "48px",
+                      height: "1px",
+                      background: "linear-gradient(to right, transparent, rgba(255,42,42,0.7), transparent)",
+                    }} />
+                    {onEnter && (
+                      <span style={{
+                        fontFamily: "'Space Grotesk', sans-serif",
+                        fontSize: "9px",
+                        letterSpacing: "0.28em",
+                        textTransform: "uppercase",
+                        color: "rgba(255,80,80,0.35)",
+                      }}>click to browse</span>
+                    )}
+                  </button>
+
+                  {/* ── Divider dot ── */}
+                  <div style={{
+                    width: "4px",
+                    height: "4px",
+                    borderRadius: "50%",
+                    background: "rgba(255,42,42,0.45)",
+                    boxShadow: "0 0 8px rgba(255,42,42,0.6)",
+                    animation: "pulse-glow 2s ease-in-out infinite",
+                  }} />
                 </div>
               )}
             </div>

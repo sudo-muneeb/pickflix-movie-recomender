@@ -1,8 +1,8 @@
 kind = "web"
 previewPath = "/"
-title = "CineScope"
+title = "PickFlix"
 version = "1.0.0"
-id = "artifacts/cinescope"
+id = "artifacts/pickflix"
 router = "path"
 
 [[integratedSkills]]
@@ -15,11 +15,11 @@ paths = [ "/" ]
 localPort = 20057
 
 [services.development]
-run = "pnpm --filter @workspace/cinescope run dev"
+run = "pnpm --filter @workspace/pickflix run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/cinescope", "run", "build" ]
-publicDir = "artifacts/cinescope/dist/public"
+build = [ "pnpm", "--filter", "@workspace/pickflix", "run", "build" ]
+publicDir = "artifacts/pickflix/dist/public"
 serve = "static"
 
 [[services.production.rewrites]]

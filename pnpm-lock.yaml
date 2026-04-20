@@ -216,7 +216,7 @@ importers:
         specifier: 3.1.0
         version: 3.1.0
 
-  artifacts/cinescope:
+  artifacts/pickflix:
     dependencies:
       '@react-three/drei':
         specifier: ^10.7.7

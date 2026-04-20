@@ -1,14 +1,16 @@
-import { SearchBar } from "./SearchBar";
+import { ReactNode } from "react";
 import { Movie } from "../data/movies";
 
 interface HUDProps {
-  onSearch: (movie: Movie) => void;
+  onSearch?: (movie: Movie) => void;
   scrollProgress: number;
+  children?: ReactNode;
 }
 
-export function HUD({ onSearch, scrollProgress }: HUDProps) {
+export function HUD({ scrollProgress, children }: HUDProps) {
   return (
     <>
+      {/* Radial vignette */}
       <div
         className="fixed inset-0 pointer-events-none z-10"
         style={{
@@ -17,38 +19,45 @@ export function HUD({ onSearch, scrollProgress }: HUDProps) {
         }}
       />
 
+      {/* Top bar */}
       <div
-        className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-8 py-6"
+        className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-8 py-6 pointer-events-none"
         style={{
           background:
             "linear-gradient(to bottom, rgba(5,5,5,0.8) 0%, transparent 100%)",
         }}
       >
-        <div>
-          <div
-            className="text-white font-semibold tracking-widest text-xs uppercase"
-            style={{ letterSpacing: "0.3em", color: "rgba(255,255,255,0.3)" }}
+        {/* Pickflix logo */}
+        <div className="flex items-baseline gap-0 select-none">
+          <span
+            style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: "20px",
+              fontWeight: 700,
+              color: "rgba(255,255,255,0.92)",
+              textShadow:
+                "0 0 16px rgba(255,42,42,0.7), 0 0 40px rgba(255,42,42,0.25)",
+              letterSpacing: "-0.02em",
+            }}
           >
-            Cine
-          </div>
-          <div
-            className="text-white font-bold text-xl leading-none"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            Pick
+          </span>
+          <span
+            style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: "20px",
+              fontWeight: 700,
+              color: "rgba(220,38,38,1)",
+              textShadow:
+                "0 0 16px rgba(255,42,42,1), 0 0 48px rgba(255,42,42,0.7)",
+              letterSpacing: "-0.02em",
+            }}
           >
-            SCOPE
-            <span
-              className="text-red-400 text-xs ml-1 align-super"
-              style={{ fontWeight: 300 }}
-            >
-              AI
-            </span>
-          </div>
+            flix
+          </span>
         </div>
 
-        <div className="pointer-events-auto">
-          <SearchBar onSelect={onSearch} />
-        </div>
-
+        {/* Depth meter */}
         <div className="text-right">
           <div className="text-white/20 text-xs tracking-wider uppercase">
             Depth
@@ -59,6 +68,7 @@ export function HUD({ onSearch, scrollProgress }: HUDProps) {
         </div>
       </div>
 
+      {/* Bottom ambient text — fades out as you scroll */}
       <div
         className="fixed bottom-0 left-0 right-0 z-20 flex flex-col items-center pb-12"
         style={{
@@ -98,6 +108,7 @@ export function HUD({ onSearch, scrollProgress }: HUDProps) {
         </div>
       </div>
 
+      {/* Left z-axis indicator */}
       <div
         className="fixed left-8 top-1/2 -translate-y-1/2 z-20 pointer-events-none"
         style={{ opacity: 0.4 }}
@@ -113,6 +124,9 @@ export function HUD({ onSearch, scrollProgress }: HUDProps) {
           z-axis
         </div>
       </div>
+
+      {/* Slot for overlays */}
+      {children}
     </>
   );
 }

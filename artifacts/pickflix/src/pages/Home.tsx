@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { Scene } from "../components/Scene";
 import { Tooltip } from "../components/Tooltip";
 import { DetailPanel } from "../components/DetailPanel";
@@ -17,6 +18,7 @@ export function Home() {
   const [mouseParallax, setMouseParallax] = useState({ x: 0, y: 0 });
   const scrollRef = useRef(0);
   const targetScrollRef = useRef(0);
+  const [, navigate] = useLocation();
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);
@@ -65,13 +67,7 @@ export function Home() {
 
   const handleSelect = useCallback((movie: Movie | null) => {
     setSelectedMovie(movie);
-  }, []);
-
-  const handleSearch = useCallback((movie: Movie) => {
-    setSelectedMovie(movie);
-    const normalizedZ = (movie.z + 100) / 200;
-    targetScrollRef.current = normalizedZ;
-  }, []);
+  }, []); // handleHover and handleSelect are the only callbacks needed
 
   return (
     <div
@@ -91,7 +87,7 @@ export function Home() {
         />
       </div>
 
-      <HUD onSearch={handleSearch} scrollProgress={scrollProgress} />
+      <HUD scrollProgress={scrollProgress} />
 
       {hoveredMovie && tooltipPos && !selectedMovie && (
         <Tooltip movie={hoveredMovie} position={tooltipPos} />
@@ -101,7 +97,7 @@ export function Home() {
         <DetailPanel movie={selectedMovie} onClose={() => setSelectedMovie(null)} />
       )}
 
-      <RetroTV visible={scrollProgress >= 0.97} />
+      <RetroTV visible={scrollProgress >= 0.97} onEnter={() => navigate("/browse")} />
     </div>
   );
 }

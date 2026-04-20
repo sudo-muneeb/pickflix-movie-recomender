@@ -1,12 +1,14 @@
 import { Movie } from "../data/movies";
-import { X, Star, Calendar, User, Film } from "lucide-react";
+import { X, Star, Calendar, User, Film, Heart } from "lucide-react";
 
 interface DetailPanelProps {
   movie: Movie;
   onClose: () => void;
+  liked?: boolean;
+  onLike?: () => void;
 }
 
-export function DetailPanel({ movie, onClose }: DetailPanelProps) {
+export function DetailPanel({ movie, onClose, liked, onLike }: DetailPanelProps) {
   return (
     <div
       className="fixed right-0 top-0 h-full w-80 z-40 flex flex-col"
@@ -128,9 +130,31 @@ export function DetailPanel({ movie, onClose }: DetailPanelProps) {
           </div>
         </div>
 
-        <div className="p-6 border-t border-white/5">
+        <div className="p-6 border-t border-white/5 flex gap-2">
+          {onLike && (
+            <button
+              onClick={onLike}
+              className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-lg text-sm font-medium transition-all"
+              style={{
+                background: liked
+                  ? "rgba(220,38,38,0.25)"
+                  : "rgba(255,255,255,0.05)",
+                border: liked
+                  ? "1px solid rgba(220,38,38,0.5)"
+                  : "1px solid rgba(255,255,255,0.08)",
+                color: liked ? "rgba(255,120,120,0.9)" : "rgba(255,255,255,0.5)",
+              }}
+              data-testid="button-like"
+            >
+              <Heart
+                size={14}
+                fill={liked ? "rgba(220,38,38,0.9)" : "none"}
+              />
+              {liked ? "Liked" : "Like"}
+            </button>
+          )}
           <button
-            className="w-full py-2.5 rounded-lg text-sm font-medium transition-all"
+            className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-all"
             style={{
               background: "rgba(255, 42, 42, 0.15)",
               border: "1px solid rgba(255, 42, 42, 0.3)",
@@ -144,7 +168,7 @@ export function DetailPanel({ movie, onClose }: DetailPanelProps) {
             }}
             data-testid="button-find-similar"
           >
-            Find Similar Films
+            Find Similar
           </button>
         </div>
       </div>
