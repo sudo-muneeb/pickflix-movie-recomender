@@ -1,4 +1,4 @@
-import { useRef, useMemo, useCallback } from "react";
+import { useRef, useMemo, useCallback, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Movie } from "../data/movies";
@@ -45,6 +45,14 @@ export function ParticleField({
 
   const sizes = useMemo(() => movies.map((m) => m.size), [movies]);
   const brightnesses = useMemo(() => movies.map((m) => m.brightness), [movies]);
+
+  const clearHover = useCallback(() => {
+    if (hoveredId.current !== null) {
+      hoveredId.current = null;
+      onHover(null, null);
+    }
+    gl.domElement.style.cursor = "default";
+  }, [gl, onHover]);
 
   const getScreenPosition = useCallback(
     (worldPos: THREE.Vector3) => {
@@ -143,14 +151,10 @@ export function ParticleField({
           gl.domElement.style.cursor = "pointer";
         }
       } else {
-        if (hoveredId.current !== null) {
-          hoveredId.current = null;
-          onHover(null, null);
-          gl.domElement.style.cursor = "default";
-        }
+        clearHover();
       }
     },
-    [movies, positions, camera, size, gl, onHover, getScreenPosition]
+    [movies, positions, camera, size, gl, onHover, getScreenPosition, clearHover]
   );
 
   const handleClick = useCallback(
@@ -165,9 +169,16 @@ export function ParticleField({
   );
 
   const handleMissed = useCallback(() => {
+    clearHover();
     selectedId.current = null;
     onSelect(null);
-  }, [onSelect]);
+  }, [clearHover, onSelect]);
+
+  useEffect(() => {
+    return () => {
+      gl.domElement.style.cursor = "default";
+    };
+  }, [gl]);
 
   const geometry = useMemo(() => new THREE.SphereGeometry(1, 6, 6), []);
   const glowGeometry = useMemo(() => new THREE.SphereGeometry(1, 6, 6), []);
@@ -206,6 +217,8 @@ export function ParticleField({
         onPointerMove={handlePointerMove}
         onClick={handleClick}
         onPointerMissed={handleMissed}
+        onPointerOut={clearHover}
+        onPointerLeave={clearHover}
       />
     </>
   );
