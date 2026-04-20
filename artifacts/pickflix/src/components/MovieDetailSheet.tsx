@@ -93,6 +93,7 @@ export function MovieDetailSheet({
       const t = requestAnimationFrame(() => setVisible(true));
       return () => cancelAnimationFrame(t);
     }
+    return;
   }, [movie, loading]);
 
   const handleClose = useCallback(() => {
@@ -134,13 +135,11 @@ export function MovieDetailSheet({
 
       {/* Sheet */}
       <div
-        className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl overflow-hidden"
+        className="fixed inset-0 z-50 overflow-hidden"
         style={{
-          maxHeight: "88vh",
           background: "rgba(9,6,6,0.98)",
-          border: "1px solid rgba(255,42,42,0.12)",
-          borderBottom: "none",
-          boxShadow: "0 -8px 60px rgba(0,0,0,0.8), 0 -2px 0 rgba(255,42,42,0.15)",
+          border: "none",
+          boxShadow: "none",
           transform: visible ? "translateY(0)" : "translateY(100%)",
           transition: "transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)",
           display: "flex",

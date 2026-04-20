@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { useDefaultMovies } from "../hooks/useDefaultMovies";
 import { useRecommend } from "../hooks/useRecommend";
 import { MovieCard } from "../components/MovieCard";
@@ -113,12 +113,16 @@ export default function BrowsePage() {
     }, 300);
   };
 
-  const likedMovies: MovieOut[] = likedIndices
-    .map((idx) => movies.find((m) => m.movie_index === idx))
-    .filter(Boolean) as MovieOut[];
-
   const displayMovies = query ? searchResults : movies;
   const isLoading = query ? searchLoading : topLoading;
+
+  const likedMovies: MovieOut[] = likedIndices
+    .map((idx) => {
+      // First try current displayMovies (search results or browse), then fall back to all movies
+      return displayMovies.find((m) => m.movie_index === idx) || 
+             movies.find((m) => m.movie_index === idx);
+    })
+    .filter(Boolean) as MovieOut[];
 
   return (
     <div
@@ -239,8 +243,38 @@ export default function BrowsePage() {
 
       {/* ── Main content ── */}
       <main className="flex-1 px-6 py-8 pb-32">
-        {/* Section title */}
-  
+        {/* Search results header with selection counter */}
+        {query && (
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 
+                className="text-lg font-semibold"
+                style={{ color: "rgba(255,255,255,0.9)", fontFamily: "'Space Grotesk', sans-serif" }}
+              >
+                Search Results
+              </h2>
+              <p
+                className="text-xs mt-1"
+                style={{ color: "rgba(255,255,255,0.4)" }}
+              >
+                {searchResults.length} {searchResults.length === 1 ? 'movie' : 'movies'} found
+              </p>
+            </div>
+            {likedIndices.length > 0 && (
+              <div
+                className="px-4 py-2 rounded-full text-sm font-medium"
+                style={{
+                  background: "rgba(220,38,38,0.15)",
+                  border: "1px solid rgba(220,38,38,0.4)",
+                  color: "rgba(255,100,100,1)",
+                  fontFamily: "'Space Grotesk', sans-serif",
+                }}
+              >
+                {likedIndices.length} selected
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Card grid */}
         <div

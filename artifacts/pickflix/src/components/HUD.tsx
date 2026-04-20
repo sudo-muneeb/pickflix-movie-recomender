@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import { Movie } from "../data/movies";
 
 interface HUDProps {
-  onSearch?: (movie: Movie) => void;
   scrollProgress: number;
   children?: ReactNode;
 }
