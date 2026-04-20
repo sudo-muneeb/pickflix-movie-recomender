@@ -1,7 +1,11 @@
 const BASE = "http://localhost:8000";
 
+/**
+ * Movie data from the API.
+ * `movie_index` is the TMDB ID of the movie.
+ */
 export interface MovieOut {
-  movie_index: number;
+  movie_index: number;  // TMDB ID
   title: string;
   year: number | null;
   language: string | null;
@@ -21,8 +25,12 @@ export interface SearchResponse {
   results: Pick<MovieOut, "movie_index" | "title" | "year" | "language">[];
 }
 
+/**
+ * Full movie details from the API.
+ * `movie_index` is the TMDB ID of the movie.
+ */
 export interface MovieDetail {
-  movie_index: number;
+  movie_index: number;  // TMDB ID
   title: string;
   original_title: string | null;
   tagline: string | null;

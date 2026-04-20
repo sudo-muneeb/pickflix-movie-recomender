@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { Search, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
-import { useTopMovies } from "../hooks/useTopMovies";
+import { useDefaultMovies } from "../hooks/useDefaultMovies";
 import { useRecommend } from "../hooks/useRecommend";
 import { MovieCard } from "../components/MovieCard";
 import { LikedTray } from "../components/LikedTray";
@@ -18,7 +18,7 @@ const LANGUAGES = [
 
 export default function BrowsePage() {
   const [, navigate] = useLocation();
-  const { movies, lang, loading: topLoading, hasMore, loadMore, setLang } = useTopMovies();
+  const { movies, lang, loading: topLoading, hasMore, loadMore, setLang } = useDefaultMovies();
   const { likedIndices, addLiked, removeLiked } = useRecommend();
 
   // search
@@ -103,17 +103,8 @@ export default function BrowsePage() {
       setSearchLoading(true);
       try {
         const data = await searchMovies(val);
-        // Convert search results (partial) to MovieOut shape for rendering
-        const partial = data.results.map((r) => ({
-          movie_index: r.movie_index,
-          title: r.title,
-          year: r.year,
-          language: r.language,
-          avg_rating: 0,
-          vote_count: 0,
-          poster_path: null,
-        })) as MovieOut[];
-        setSearchResults(partial);
+        // Use the full movie data returned by the search endpoint
+        setSearchResults(data.results as MovieOut[]);
       } catch {
         setSearchResults([]);
       } finally {
@@ -215,34 +206,7 @@ export default function BrowsePage() {
             </div>
           </div>
 
-          {/* Get recs CTA */}
-          {likedIndices.length > 0 && (
-            <button
-              onClick={() =>
-                navigate("/recs", {
-                  state: { liked_indices: likedIndices },
-                } as any)
-              }
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium shrink-0 transition-all"
-              style={{
-                background: "rgba(220,38,38,0.85)",
-                color: "white",
-                border: "1px solid rgba(255,80,80,0.3)",
-                boxShadow: "0 0 20px rgba(220,38,38,0.3)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.boxShadow =
-                  "0 0 32px rgba(220,38,38,0.55)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.boxShadow =
-                  "0 0 20px rgba(220,38,38,0.3)";
-              }}
-            >
-              <Sparkles size={13} />
-              Get recs ({likedIndices.length})
-            </button>
-          )}
+      
         </div>
 
         {/* Language pills */}
@@ -276,29 +240,7 @@ export default function BrowsePage() {
       {/* ── Main content ── */}
       <main className="flex-1 px-6 py-8 pb-32">
         {/* Section title */}
-        {/* <div className="flex items-baseline gap-3 mb-6">
-          <h1
-            className="text-xl font-semibold"
-            style={{
-              color: "rgba(255,255,255,0.85)",
-              fontFamily: "'Space Grotesk', sans-serif",
-            }}
-          >
-            {query
-              ? `Search results for "${query}"`
-              : lang
-              ? `Top films · ${lang.toUpperCase()}`
-              : "Top films"}
-          </h1>
-          {!query && (
-            <span
-              className="text-xs uppercase tracking-wider"
-              style={{ color: "rgba(255,42,42,0.5)" }}
-            >
-              {movies.length} loaded
-            </span>
-          )}
-        </div> */}
+  
 
         {/* Card grid */}
         <div

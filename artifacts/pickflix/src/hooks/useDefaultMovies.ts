@@ -15,7 +15,7 @@ const createPaginationState = (): PaginationState => ({
   inFlightRequest: null,
 });
 
-export function useTopMovies() {
+export function useDefaultMovies() {
   const [movies, setMovies] = useState<MovieOut[]>([]);
   const [lang, setLangState] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -66,7 +66,7 @@ export function useTopMovies() {
       setHasMore(data.has_more);
     } catch (err) {
       paginationState.inFlightRequest = null;
-      console.error("useTopMovies loadMore:", err);
+      console.error("useDefaultMovies loadMore:", err);
     } finally {
       if (session === sessionRef.current) setLoading(false);
     }
@@ -102,7 +102,7 @@ export function useTopMovies() {
         setHasMore(data.has_more);
       } catch (err) {
         paginationState.inFlightRequest = null;
-        console.error("useTopMovies setLang:", err);
+        console.error("useDefaultMovies setLang:", err);
       } finally {
         if (session === sessionRef.current) setLoading(false);
       }

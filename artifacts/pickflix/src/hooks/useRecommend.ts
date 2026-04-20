@@ -1,6 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { fetchRecommendations, MovieOut } from "../lib/api";
 
+/**
+ * Hook for managing personalized recommendations.
+ * All indices (likedIndices, excludedIndices) are TMDB IDs.
+ */
 export function useRecommend(initialIndices: number[] = []) {
   const [likedIndices, setLikedIndices] = useState<number[]>(initialIndices);
   const [shownSet, setShownSet] = useState<Set<number>>(

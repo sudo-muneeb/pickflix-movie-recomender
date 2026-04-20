@@ -106,7 +106,7 @@ Click "Get recommendations" → /recs
 - `<LikedTray>` at bottom shows all liked movies' thumbnails + count badge
 
 **Double-click behavior:**
-- Double-click any card → `fetchMovieDetail(movie_index)`
+- Double-click any card → `fetchMovieDetail(movie_index)` where `movie_index` is the TMDB ID
 - `<MovieDetailSheet>` slides up from bottom
 - Shows: backdrop image, poster, title, genres, overview, cast, directors, budget, IMDb link, like button
 - Close options: X button, backdrop click, Escape key
@@ -231,10 +231,10 @@ Click "Get recommendations" → /recs
 
 ## 🎣 Hook Behaviors
 
-### **`useTopMovies()`**
+### **`useDefaultMovies()`**
 Manages paginated browse data:
 ```ts
-const { movies, lang, loading, hasMore, loadMore, setLang } = useTopMovies();
+const { movies, lang, loading, hasMore, loadMore, setLang } = useDefaultMovies();
 ```
 
 **State:**
@@ -339,7 +339,7 @@ App.tsx (Route provider, QueryClient)
   │   └── <RetroTV> (boot sequence, navigate to /browse)
   │
   ├── BrowsePage.tsx (card grid + filters)
-  │   ├── useTopMovies() (pagination state)
+  │   ├── useDefaultMovies() (pagination state)
   │   ├── <SearchBar> (query → GET /movies/search)
   │   ├── <MovieCard> × 20 (poster + like button)
   │   │   └── onDoubleClick → fetch detail
@@ -421,7 +421,7 @@ frontend/
 │       │   │   ├── Tooltip.tsx          ← Hover tooltip
 │       │   │   └── LoadingScreen.tsx    ← Spinner
 │       │   ├── hooks/
-│       │   │   ├── useTopMovies.ts      ← Browse pagination state
+│       │   │   ├── useDefaultMovies.ts      ← Browse pagination state
 │       │   │   └── useRecommend.ts      ← Recs + liked state
 │       │   ├── lib/
 │       │   │   ├── api.ts               ← Fetch wrappers
@@ -461,7 +461,7 @@ Root component. Sets up `QueryClientProvider` and **wouter** `Router` with three
 ### `src/pages/BrowsePage.tsx`
 **The 2D home / browse page.**
 
-- On mount calls `GET /movies/default?page=0` via `useTopMovies` and renders a responsive card grid.
+- On mount calls `GET /movies/default?page=0` via `useDefaultMovies` and renders a responsive card grid.
 - **Language filter pills** (All / EN / KO / HI / FR / JA / ES / UR / DE) re-fetch with `?lang=xx`.
 - **Search bar** (debounced 300ms) calls `GET /movies/search?q=` and switches the grid to search results.
 - **Infinite scroll** via `IntersectionObserver` on a sentinel `<div>` at the bottom.
@@ -496,7 +496,7 @@ Overlay for the 3D landing page. Shows:
 ### `src/components/Scene.tsx`
 Thin wrapper around `@react-three/fiber` `<Canvas>`. Sets up camera, fog, ambient light, bloom post-processing (`@react-three/postprocessing`), and renders `<ParticleField>`.
 
-Accepts an optional `apiMovies` prop — when provided, it maps `MovieOut[]` from the backend into the `Movie` shape used by ParticleField (computing spatial x/y/z positions from `movie_index`). Falls back to the static 3000-entry `MOVIES` dataset when no API data is available.
+Accepts an optional `apiMovies` prop — when provided, it maps `MovieOut[]` from the backend (where `movie_index` is the TMDB ID) into the `Movie` shape used by ParticleField (computing spatial x/y/z positions from `movie_index`). Falls back to the static 3000-entry `MOVIES` dataset when no API data is available.
 
 ---
 
@@ -525,7 +525,7 @@ Root component. Sets up `QueryClientProvider` and **wouter** `Router` with three
 - Consistent logging for monitoring
 
 **Frontend manages:**
-- State via custom hooks (`useTopMovies`, `useRecommend`)
+- State via custom hooks (`useDefaultMovies`, `useRecommend`)
 - Three.js rendering with @react-three/fiber
 - Responsive card grid UI with Tailwind CSS
 - Seamless routing between discovery and recommendation modes
