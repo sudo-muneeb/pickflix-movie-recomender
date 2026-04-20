@@ -27,34 +27,43 @@ export function HUD({ scrollProgress, children }: HUDProps) {
             "linear-gradient(to bottom, rgba(5,5,5,0.8) 0%, transparent 100%)",
         }}
       >
-        {/* Pickflix logo */}
-        <div className="flex items-baseline gap-0 select-none">
-          <span
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: "20px",
-              fontWeight: 700,
-              color: "rgba(255,255,255,0.92)",
-              textShadow:
-                "0 0 16px rgba(255,42,42,0.7), 0 0 40px rgba(255,42,42,0.25)",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Pick
-          </span>
-          <span
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: "20px",
-              fontWeight: 700,
-              color: "rgba(220,38,38,1)",
-              textShadow:
-                "0 0 16px rgba(255,42,42,1), 0 0 48px rgba(255,42,42,0.7)",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            flix
-          </span>
+        {/* Pickflix logo with AI · Discover */}
+        <div className="flex items-center gap-12">
+          <div className="flex items-baseline gap-0 select-none">
+            <span
+              style={{
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: "20px",
+                fontWeight: 700,
+                color: "rgba(255,255,255,0.92)",
+                textShadow:
+                  "0 0 16px rgba(255,42,42,0.7), 0 0 40px rgba(255,42,42,0.25)",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Pick
+            </span>
+            <span
+              style={{
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: "20px",
+                fontWeight: 700,
+                color: "rgba(220,38,38,1)",
+                textShadow:
+                  "0 0 16px rgba(255,42,42,1), 0 0 48px rgba(255,42,42,0.7)",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              flix
+            </span>
+          </div>
+          <div style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize: "11px",
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            color: "rgba(255,120,120,0.5)",
+          }}>AI · Discover</div>
         </div>
 
         {/* Depth meter */}

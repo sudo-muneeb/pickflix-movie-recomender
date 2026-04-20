@@ -24,6 +24,10 @@ node_modules
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
+- increasaet the size of the tv as comapred to the screen , not take whole screen 
+- move the nav bar from insde the tv to the top , remove the search bar 
+-  t;he diff bewtween the stars ending and the tv loading tkes time, decrease it 
+- add more stars tot he eft and right side of the screen 
 !.vscode/launch.json
 !.vscode/extensions.json
 

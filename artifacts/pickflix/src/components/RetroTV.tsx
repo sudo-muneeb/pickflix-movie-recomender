@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Search } from "lucide-react";
 
 type TVPhase = "off" | "flicker" | "static" | "clearing" | "on";
 
@@ -127,19 +126,19 @@ export function RetroTV({ visible, onEnter }: RetroCRTProps) {
       hasAnimatedRef.current = true;
       setTvVisible(true);
 
-      schedule(() => setFlickerOn(true), 300);
-      schedule(() => setFlickerOn(false), 420);
-      schedule(() => setFlickerOn(true), 520);
-      schedule(() => setFlickerOn(false), 560);
-      schedule(() => setFlickerOn(true), 630);
-      schedule(() => setFlickerOn(false), 660);
-      schedule(() => setFlickerOn(true), 710);
+      schedule(() => setFlickerOn(true), 130);
+      schedule(() => setFlickerOn(false), 180);
+      schedule(() => setFlickerOn(true), 225);
+      schedule(() => setFlickerOn(false), 245);
+      schedule(() => setFlickerOn(true), 275);
+      schedule(() => setFlickerOn(false), 285);
+      schedule(() => setFlickerOn(true), 305);
       schedule(() => {
         setPhase("static");
         setFlickerOn(true);
-      }, 780);
-      schedule(() => setPhase("clearing"), 2200);
-      schedule(() => setPhase("on"), 3600);
+      }, 340);
+      schedule(() => setPhase("clearing"), 900);
+      schedule(() => setPhase("on"), 1500);
     }
 
     if (!visible) {
@@ -162,7 +161,7 @@ export function RetroTV({ visible, onEnter }: RetroCRTProps) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
-        background: "rgba(4,2,2,0.96)",
+        background: "rgba(4,2,2,0.4)",
         animation: tvVisible ? "tvOverlayIn 0.6s ease-out forwards" : undefined,
       }}
       data-testid="retro-tv-overlay"
@@ -264,68 +263,11 @@ export function RetroTV({ visible, onEnter }: RetroCRTProps) {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    justifyContent: "space-between",
+                    justifyContent: "center",
                     padding: "20px 24px 20px",
                     animation: "textReveal 0.8s ease-out forwards",
                   }}
                 >
-                  {/* ── Navbar ── */}
-                  <div style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    paddingBottom: "12px",
-                    borderBottom: "1px solid rgba(255,42,42,0.15)",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
-                      <span style={{
-                        fontFamily: "'Space Grotesk', sans-serif",
-                        fontSize: "18px",
-                        fontWeight: 700,
-                        color: "rgba(255,255,255,0.95)",
-                        textShadow: "0 0 18px rgba(255,42,42,0.9), 0 0 40px rgba(255,42,42,0.4)",
-                        letterSpacing: "-0.01em",
-                      }}>Pick</span>
-                      <span style={{
-                        fontFamily: "'Space Grotesk', sans-serif",
-                        fontSize: "18px",
-                        fontWeight: 700,
-                        color: "rgba(220,38,38,1)",
-                        textShadow: "0 0 18px rgba(255,42,42,1), 0 0 50px rgba(255,42,42,0.6)",
-                        letterSpacing: "-0.01em",
-                      }}>flix</span>
-                    </div>
-                    <div style={{
-                      fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: "8px",
-                      letterSpacing: "0.35em",
-                      textTransform: "uppercase",
-                      color: "rgba(255,80,80,0.4)",
-                    }}>AI · Discover</div>
-                  </div>
-
-                  {/* ── Search bar ── */}
-                  <div style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "7px 12px",
-                    borderRadius: "20px",
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,42,42,0.2)",
-                    boxShadow: "0 0 16px rgba(255,42,42,0.06)",
-                  }}>
-                    <Search size={11} color="rgba(255,80,80,0.4)" />
-                    <span style={{
-                      fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: "11px",
-                      color: "rgba(255,255,255,0.2)",
-                      letterSpacing: "0.03em",
-                    }}>Search movies, genres, directors…</span>
-                  </div>
-
                   {/* ── CTA ── */}
                   <button
                     onClick={onEnter}

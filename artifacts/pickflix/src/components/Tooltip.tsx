@@ -21,7 +21,7 @@ export function Tooltip({ movie, position }: TooltipProps) {
       <div
         className="glass-panel rounded-lg px-3 py-2 min-w-[160px]"
         style={{
-          animation: "fadeIn 0.15s ease-out",
+          animation: "fadeIn 0.08s ease-out",
         }}
       >
         <div className="text-sm font-semibold text-white leading-tight">

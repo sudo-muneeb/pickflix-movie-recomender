@@ -75,7 +75,7 @@ function seededRandom(seed: number): number {
   return x - Math.floor(x);
 }
 
-export function generateMovies(count: number = 3000): Movie[] {
+export function generateMovies(count: number = 4500): Movie[] {
   const movies: Movie[] = [];
   
   for (let i = 0; i < count; i++) {
@@ -114,8 +114,8 @@ export function generateMovies(count: number = 3000): Movie[] {
       genre: genres,
       director: DIRECTORS[dirIdx],
       description: DESCRIPTIONS[descIdx],
-      x: (r2 - 0.5) * 120,
-      y: (r3 - 0.5) * 80,
+      x: (r2 - 0.5) * 160,
+      y: (r3 - 0.5) * 100,
       z,
       brightness,
       size,
@@ -125,4 +125,4 @@ export function generateMovies(count: number = 3000): Movie[] {
   return movies;
 }
 
-export const MOVIES = generateMovies(3000);
+export const MOVIES = generateMovies(4500);

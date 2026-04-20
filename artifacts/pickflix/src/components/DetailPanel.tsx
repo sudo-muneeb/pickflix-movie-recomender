@@ -12,7 +12,7 @@ export function DetailPanel({ movie, onClose, liked, onLike }: DetailPanelProps)
   return (
     <div
       className="fixed right-0 top-0 h-full w-80 z-40 flex flex-col"
-      style={{ animation: "slideIn 0.3s ease-out" }}
+      style={{ animation: "slideIn 0.15s ease-out" }}
       data-testid="detail-panel"
     >
       <div className="glass-panel h-full flex flex-col border-l border-red-900/20">

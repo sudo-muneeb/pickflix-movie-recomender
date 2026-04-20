@@ -86,6 +86,10 @@
     backdrop-filter: blur(20px);
   }
 
+  .slideIn {
+    animation: slideOut 0.15s ease-in forwards;
+  }
+
   .pulse-dot {
     animation: pulse-glow 2s ease-in-out infinite;
   }
