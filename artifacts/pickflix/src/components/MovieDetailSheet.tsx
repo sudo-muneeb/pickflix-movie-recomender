@@ -203,7 +203,7 @@ export function MovieDetailSheet({
               {backdropUrl && (
                 <div
                   className="relative w-full overflow-hidden shrink-0"
-                  style={{ height: 220 }}
+                  style={{ height: 450 }}
                 >
                   <img
                     src={backdropUrl}
@@ -214,7 +214,7 @@ export function MovieDetailSheet({
                     className="absolute inset-0"
                     style={{
                       background:
-                        "linear-gradient(to bottom, rgba(9,6,6,0) 0%, rgba(9,6,6,0.7) 70%, rgba(9,6,6,1) 100%)",
+                        "linear-gradient(to bottom, rgba(9,6,6,0) 0%, rgba(9,6,6,0.6) 60%, rgba(9,6,6,0.95) 100%)",
                     }}
                   />
                 </div>
@@ -222,7 +222,7 @@ export function MovieDetailSheet({
 
               {/* Main content */}
               <div
-                className={`px-6 flex gap-6 ${backdropUrl ? "-mt-16 relative z-10" : "pt-6"}`}
+                className={`px-6 flex gap-6 ${backdropUrl ? "-mt-24 relative z-10" : "pt-6"}`}
               >
                 {/* Poster */}
                 <div

@@ -117,7 +117,7 @@ export async function searchMovies(q: string): Promise<SearchResponse> {
  */
 export async function checkBackendHealth(): Promise<boolean> {
   try {
-    const res = await fetch(`${BASE}/`, {
+    const res = await fetch(`${BASE}/health`, {
       method: "GET",
       signal: AbortSignal.timeout(5000), // 5 second timeout
     });
