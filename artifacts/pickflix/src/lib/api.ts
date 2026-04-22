@@ -110,3 +110,19 @@ export async function searchMovies(q: string): Promise<SearchResponse> {
   if (!res.ok) throw new Error(`searchMovies: ${res.status}`);
   return res.json();
 }
+
+/**
+ * Check if the backend server is healthy.
+ * Returns true if healthy, false otherwise.
+ */
+export async function checkBackendHealth(): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE}/`, {
+      method: "GET",
+      signal: AbortSignal.timeout(5000), // 5 second timeout
+    });
+    return res.ok;
+  } catch (error) {
+    return false;
+  }
+}

@@ -7,6 +7,16 @@ import { HUD } from "../components/HUD";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { RetroTV } from "../components/RetroTV";
 import { Movie } from "../data/movies";
+import { checkBackendHealth } from "@/lib/api";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 export function Home() {
   const [loading, setLoading] = useState(true);
@@ -16,6 +26,7 @@ export function Home() {
   const [cameraZOffset, setCameraZOffset] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [mouseParallax, setMouseParallax] = useState({ x: 0, y: 0 });
+  const [showBackendError, setShowBackendError] = useState(false);
   const scrollRef = useRef(0);
   const targetScrollRef = useRef(0);
   const [, navigate] = useLocation();
@@ -67,7 +78,16 @@ export function Home() {
 
   const handleSelect = useCallback((movie: Movie | null) => {
     setSelectedMovie(movie);
-  }, []); // handleHover and handleSelect are the only callbacks needed
+  }, []);
+
+  const handleEnter = useCallback(async () => {
+    const isHealthy = await checkBackendHealth();
+    if (isHealthy) {
+      navigate("/browse");
+    } else {
+      setShowBackendError(true);
+    }
+  }, [navigate]);
 
   return (
     <div
@@ -97,7 +117,23 @@ export function Home() {
         <DetailPanel movie={selectedMovie} onClose={() => setSelectedMovie(null)} />
       )}
 
-      <RetroTV visible={scrollProgress >= 0.97} onEnter={() => navigate("/browse")} />
+      <RetroTV visible={scrollProgress >= 0.97} onEnter={handleEnter} />
+
+      <AlertDialog open={showBackendError} onOpenChange={setShowBackendError}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Backend Not Available</AlertDialogTitle>
+            <AlertDialogDescription>
+              The backend server is currently unavailable. Please make sure the server is running and try again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowBackendError(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
