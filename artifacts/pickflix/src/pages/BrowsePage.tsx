@@ -162,16 +162,19 @@ export default function BrowsePage() {
             </Link>
 
             {/* Logo */}
-            <div className="flex items-baseline gap-1">
+            <div 
+              className="flex items-baseline gap-0.5"
+              style={{ transition: "all 0.3s ease" }}
+            >
               <span
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: "24px",
-                  fontWeight: 800,
-                  color: "rgba(255,255,255,0.95)",
+                  fontSize: "36px",
+                  fontWeight: 900,
+                  color: "rgba(255,255,255,0.98)",
                   textShadow:
-                    "0 0 20px rgba(255,42,42,0.6), 0 0 40px rgba(255,42,42,0.2)",
-                  letterSpacing: "-0.02em",
+                    "0 0 30px rgba(255,42,42,0.8), 0 0 60px rgba(255,42,42,0.4), 0 0 90px rgba(255,42,42,0.15)",
+                  letterSpacing: "-0.03em",
                 }}
               >
                 Pick
@@ -179,17 +182,15 @@ export default function BrowsePage() {
               <span
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: "24px",
-                  fontWeight: 800,
-                  background: "linear-gradient(135deg, #ff2a2a 0%, #dc2626 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                  textShadow: "0 0 20px rgba(255,42,42,1)",
-                  letterSpacing: "-0.02em",
+                  fontSize: "36px",
+                  fontWeight: 900,
+                  color: "#ff2a2a",
+                  textShadow:
+                    "0 0 20px rgba(255,42,42,1), 0 0 40px rgba(255,42,42,0.6), 0 0 60px rgba(255,42,42,0.3)",
+                  letterSpacing: "-0.03em",
                 }}
               >
-                flix
+                Flix
               </span>
             </div>
 

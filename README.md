@@ -199,7 +199,7 @@ Click "Get recommendations" → /recs
     - On click: navigate to `/recs` with `history.state`
 
 #### **`<HUD.tsx>`** (3D home page overlay)
-- Top-left: **Pickflix** logo (Pick = white glow, flix = red glow)
+- Top-left: **Pickflix** logo (Pick = white glow, Flix = red glow)
 - Top-right: **Depth %** counter (0–100%, updates as you scroll)
 - Bottom: **"Discover your taste in motion"** tagline (fades as you scroll past 50%)
 - Left edge: Vertical z-axis indicator line (animated)
@@ -485,7 +485,7 @@ Root component. Sets up `QueryClientProvider` and **wouter** `Router` with three
 
 ### `src/components/HUD.tsx`
 Overlay for the 3D landing page. Shows:
-- **Top-left:** `Pick` (white glow) + `flix` (red glow) logotype
+- **Top-left:** `Pick` (white glow) + `Flix` (red glow) logotype
 - **Top-right:** Depth % counter (tracks scroll position)
 - **Bottom:** "Discover your taste in motion" tagline that fades as you scroll
 - **Left edge:** Vertical z-axis indicator line

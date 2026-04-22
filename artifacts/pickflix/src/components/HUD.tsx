@@ -53,7 +53,7 @@ export function HUD({ scrollProgress, children }: HUDProps) {
                 letterSpacing: "-0.02em",
               }}
             >
-              flix
+              Flix
             </span>
           </div>
           <div style={{
