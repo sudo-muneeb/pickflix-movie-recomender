@@ -36,7 +36,7 @@ jobs:
           version: 8
 
       - name: Install dependencies
-        run: cd artifacts/pickflix && pnpm install
+        run: pnpm install
 
       - name: Build
         run: cd artifacts/pickflix && BASE_PATH="/pickflix-movie-recomender/" PORT=3000 pnpm build
